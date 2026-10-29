@@ -43,8 +43,8 @@ jobs:
           cache-dependency-path: apps/frontend/package-lock.json
       - name: Regenerate lockfile from patched semver ranges
         run: |
+          rm -f apps/frontend/package-lock.json
           npm --prefix apps/frontend install --package-lock-only --ignore-scripts --no-audit
-          npm --prefix apps/frontend update --package-lock-only --ignore-scripts --no-audit
       - name: Push patched dependency lockfile to scoped branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/hardening/english-local-ai-providers-20261029'
         run: |
@@ -63,10 +63,9 @@ jobs:
         continue-on-error: true
         run: npm --prefix apps/frontend audit --omit=dev --audit-level=high
 
-      - name: Generate security-updated lockfile in isolated CI worktree
+      - name: Archive resolved lockfile from CI
         if: always()
         run: |
-          npm --prefix apps/frontend audit fix --package-lock-only --ignore-scripts || true
           mkdir -p audit-results
           cp apps/frontend/package-lock.json audit-results/package-lock.json
       - name: Capture full frontend dependency advisories

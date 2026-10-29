@@ -41,16 +41,16 @@ PERSPECTIVES = {
     "third-person follow",
     "third-person observer",
 }
-STYLE_EN_TO_CN = {
-    "real-world footage": "真实视频",
-    "animation/anime": "动画/动漫",
-    "CG": "CG",
-    "video game": "游戏",
-    "software/web/app/computer screen recording": "软件/网页/App/电脑录屏",
-    "slideshow": "幻灯片",
+STYLE_OPTIONS = {
+    "real-world footage",
+    "animation/anime",
+    "CG",
+    "video game",
+    "software/web/app/computer screen recording",
+    "slideshow",
 }
 ACTION_WRAPPER = re.compile(
-    r"\s*<Action([1-9][0-9]*)>(.*?)</Action\1>\s*[.!?。！？]?\s*", re.DOTALL
+    r"\s*<Action([1-9][0-9]*)>(.*?)</Action\1>\s*[.!?]?\s*", re.DOTALL
 )
 SUBJECT_TOKEN = re.compile(r"<\|Subject([1-9][0-9]*)\|>")
 
@@ -284,133 +284,88 @@ def seconds_from_timestamp(value: str) -> float:
 
 
 def validate_final(parsed: dict[str, Any], segments: list[dict[str, Any]]):
-    if set(parsed) != {"english_json", "chinese_json"}:
-        raise ValueError("final response needs only english_json and chinese_json")
-    subject_ids = None
-    action_times = None
-    for language in ("english_json", "chinese_json"):
-        item = parsed[language]
-        if not isinstance(item, dict) or set(item) != {
-            "perspective_view",
-            "Style",
-            "subject_list",
-            "segments",
-        }:
-            raise ValueError(f"{language}: missing or extra top-level fields")
-        if item.get("perspective_view") not in PERSPECTIVES:
-            raise ValueError(f"{language}: invalid perspective_view")
-        if language == "english_json":
-            if item.get("Style") not in STYLE_EN_TO_CN:
-                raise ValueError("english_json: invalid Style")
-        elif item.get("Style") != STYLE_EN_TO_CN[parsed["english_json"]["Style"]]:
-            raise ValueError("chinese_json: Style does not match English Style")
+    """Validate English-only captions, segment boundaries and action identity."""
+    if not isinstance(parsed, dict) or set(parsed) != {"english_json"}:
+        raise ValueError("final response must contain only english_json")
+    item = parsed["english_json"]
+    if not isinstance(item, dict) or set(item) != {
+        "perspective_view", "Style", "subject_list", "segments",
+    }:
+        raise ValueError("english_json: invalid fields")
+    if item["perspective_view"] not in PERSPECTIVES:
+        raise ValueError("english_json: invalid perspective_view")
+    if item["Style"] not in STYLE_OPTIONS:
+        raise ValueError("english_json: invalid Style")
+    subjects = item["subject_list"]
+    if not isinstance(subjects, list):
+        raise ValueError("english_json: subject_list must be a list")
+    ids = []
+    for number, subject in enumerate(subjects, 1):
         if (
-            language == "chinese_json"
-            and item["perspective_view"] != parsed["english_json"]["perspective_view"]
+            not isinstance(subject, dict)
+            or set(subject) != {"subject_id", "display_name", "subject_attribute"}
+            or subject["subject_id"] != f"<|Subject{number}|>"
+            or not isinstance(subject["display_name"], str)
+            or not subject["display_name"].strip()
         ):
-            raise ValueError("bilingual perspective_view values differ")
-        subjects = item["subject_list"]
-        if not isinstance(subjects, list):
-            raise ValueError(f"{language}: subject_list must be a list")
-        ids = []
-        for number, subject in enumerate(subjects, 1):
+            raise ValueError(f"english_json: invalid subject {number}")
+        ids.append(subject["subject_id"])
+    captions = item["segments"]
+    if not isinstance(captions, list) or len(captions) != len(segments):
+        raise ValueError("english_json: segment count mismatch")
+    for index, (caption, segment) in enumerate(zip(captions, segments), 1):
+        if (
+            not isinstance(caption, dict)
+            or caption.get("start_time") != timestamp(segment["start_sec"])
+            or caption.get("end_time") != timestamp(segment["end_sec"])
+        ):
+            raise ValueError(f"segment {index}: timestamps changed")
+        if set(caption) != {
+            "start_time", "end_time", "visual_description_long",
+            "description_change", "contained_actions",
+        }:
+            raise ValueError(f"segment {index}: invalid fields")
+        if index == 1:
             if (
-                not isinstance(subject, dict)
-                or set(subject) != {"subject_id", "display_name", "subject_attribute"}
-                or subject["subject_id"] != f"<|Subject{number}|>"
-                or not isinstance(subject["display_name"], str)
-                or not subject["display_name"].strip()
+                not isinstance(caption["visual_description_long"], str)
+                or not caption["visual_description_long"].strip()
+                or caption["description_change"] is not None
             ):
-                raise ValueError(f"{language}: subject {number} has an invalid schema")
-            ids.append(subject["subject_id"])
-        if subject_ids is not None and ids != subject_ids:
-            raise ValueError("bilingual subject IDs differ")
-        subject_ids = ids
-        captions = item.get("segments")
-        if not isinstance(captions, list) or len(captions) != len(segments):
-            raise ValueError(f"{language}: segment count mismatch")
-        language_action_times = []
-        for index, (caption, segment) in enumerate(zip(captions, segments), 1):
-            if (
-                not isinstance(caption, dict)
-                or caption.get("start_time") != timestamp(segment["start_sec"])
-                or caption.get("end_time") != timestamp(segment["end_sec"])
-            ):
-                raise ValueError(
-                    f"{language} segment {index}: fixed timestamps changed"
-                )
-            if set(caption) != {
-                "start_time",
-                "end_time",
-                "visual_description_long",
-                "description_change",
-                "contained_actions",
+                raise ValueError("first segment: expected description and null change")
+        elif (
+            caption["visual_description_long"] is not None
+            or not isinstance(caption["description_change"], str)
+            or not caption["description_change"].strip()
+        ):
+            raise ValueError(f"segment {index}: invalid change description")
+        actions = caption["contained_actions"]
+        if not isinstance(actions, list):
+            raise ValueError(f"segment {index}: contained_actions must be a list")
+        prior_end = segment["start_sec"]
+        for action_number, action in enumerate(actions, 1):
+            if not isinstance(action, dict) or set(action) != {
+                "start_time", "end_time", "action_description",
             }:
-                raise ValueError(f"{language} segment {index}: missing or extra fields")
-            if index == 1:
-                if (
-                    not isinstance(caption["visual_description_long"], str)
-                    or not caption["visual_description_long"].strip()
-                    or caption["description_change"] is not None
-                ):
-                    raise ValueError(
-                        f"{language} segment {index}: invalid first description"
-                    )
-            elif (
-                caption["visual_description_long"] is not None
-                or not isinstance(caption["description_change"], str)
-                or not caption["description_change"].strip()
+                raise ValueError(f"segment {index}: invalid action")
+            start = seconds_from_timestamp(action["start_time"])
+            end = seconds_from_timestamp(action["end_time"])
+            if (
+                start < prior_end - 0.001
+                or end <= start
+                or end > segment["end_sec"] + 0.001
             ):
-                raise ValueError(
-                    f"{language} segment {index}: invalid change description"
-                )
-            if not isinstance(caption.get("contained_actions"), list):
-                raise ValueError(
-                    f"{language} segment {index}: contained_actions missing"
-                )
-            segment_action_times = []
-            prior_end = segment["start_sec"]
-            for action_number, action in enumerate(caption["contained_actions"], 1):
-                if not isinstance(action, dict) or set(action) != {
-                    "start_time",
-                    "end_time",
-                    "action_description",
-                }:
-                    raise ValueError(f"{language} segment {index}: malformed action")
-                start = seconds_from_timestamp(action["start_time"])
-                end = seconds_from_timestamp(action["end_time"])
-                if (
-                    start < prior_end - 0.001
-                    or end <= start
-                    or end > segment["end_sec"] + 0.001
-                ):
-                    raise ValueError(
-                        f"{language} segment {index}: invalid action timeline"
-                    )
-                description = action["action_description"]
-                match = (
-                    ACTION_WRAPPER.fullmatch(description)
-                    if isinstance(description, str)
-                    else None
-                )
-                if match is None or int(match.group(1)) != action_number:
-                    raise ValueError(
-                        f"{language} segment {index}: invalid Action wrapper"
-                    )
-                mentioned = {
-                    f"<|Subject{number}|>"
-                    for number in SUBJECT_TOKEN.findall(match.group(2))
-                }
-                if not mentioned or not mentioned.issubset(ids):
-                    raise ValueError(
-                        f"{language} segment {index}: Action has no valid Subject token"
-                    )
-                segment_action_times.append((action["start_time"], action["end_time"]))
-                prior_end = end
-            language_action_times.append(segment_action_times)
-        if action_times is not None and action_times != language_action_times:
-            raise ValueError("bilingual action timestamps differ")
-        action_times = language_action_times
+                raise ValueError(f"segment {index}: invalid action timeline")
+            description = action["action_description"]
+            match = ACTION_WRAPPER.fullmatch(description) if isinstance(description, str) else None
+            if match is None or int(match.group(1)) != action_number:
+                raise ValueError(f"segment {index}: invalid Action wrapper")
+            mentioned = {
+                f"<|Subject{number}|>"
+                for number in SUBJECT_TOKEN.findall(match.group(2))
+            }
+            if not mentioned or not mentioned.issubset(ids):
+                raise ValueError(f"segment {index}: invalid Subject token")
+            prior_end = end
 
 
 def chat(

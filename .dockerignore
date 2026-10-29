@@ -13,6 +13,14 @@ dist
 outputs
 pretrained_models
 .runtime
+.env
+.env.*
+!.env.example
+**/*.pem
+**/*.key
+**/id_rsa*
+**/id_ed25519*
+audit-results
 *.safetensors
 *.pt
 *.pth

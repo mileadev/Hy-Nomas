@@ -109,3 +109,27 @@ requests 2.33.0; wheel 0.46.2. Gradio 5.3.0 was removed from default
 installation: opt into the Gradio 6 UI dependency only when using the
 standalone interface. Its runtime compatibility has not been established.
 Dependency/version choices must be validated in a real GPU environment.
+
+## Final automated scan snapshot
+
+At commit c17cdfb (2026-10-29), the CI audit reported **zero
+vulnerability records in the 43 explicitly pinned direct Python dependencies**.
+Bandit reported **383 potential issues (362 low / 21 medium)** after removing
+arbitrary checkpoint-ratio evaluation and restricting LoRA checkpoint restores.
+The scanner's remaining medium observations include Hub models without fixed
+revision pins, legacy trusted RNG pickle, and temporary-file usage. Review the
+per-file findings in the uploaded GitHub Actions security artifact.
+
+The frontend's production-only npm audit reported **zero vulnerabilities**.
+The full development dependency tree still reported **five advisory groups**
+(three high and two moderate), involving Vite/Vitest, undici and source-map-js.
+An attempted semver/lockfile update in the GitHub runner failed because npm's
+resolver threw "Cannot read properties of null (reading 'edgesOut')"; the
+temporary update workflow was rolled back rather than committing an untested,
+partially regenerated lockfile. The original npm lockfile is retained.
+**Do not expose the development server to untrusted clients.**
+
+The Docker build context now excludes .env files, local keys and temporary
+artifacts to reduce accidental credential inclusion. The optional Reactor
+runtime uses the safer first-index package index strategy. Neither native
+container build nor Reactor GPU startup has been executed in CI.

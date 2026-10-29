@@ -93,7 +93,9 @@ class GalleryStorageBusyError(RuntimeError):
 
 _GENERIC_GALLERY_TITLES = {"", "saved world"}
 _GALLERY_TITLE_PREFIX_RE = re.compile(
-    r"^(?:接下来|最后|首先|随后|然后)?(?:约)?\d+(?:\.\d+)?秒[，,:：\s]*"
+    r"^(?:(?:next|then|finally|first|after that)\s+)?(?:about\s+)?"
+    r"\d+(?:\.\d+)?\s+seconds?[,:;\s]*",
+    re.IGNORECASE,
 )
 
 
@@ -103,17 +105,15 @@ def _gallery_title_snippet(value: object, *, limit: int = 48) -> str:
     text = " ".join(str(value or "").split()).strip()
     text = _GALLERY_TITLE_PREFIX_RE.sub("", text)
     for marker in (
-        "。镜头继续",
-        "；镜头继续",
         ". The camera",
-        "。使用第三人称",
+        ". Use third-person",
     ):
         text = text.split(marker, 1)[0].strip()
     if not text:
         return ""
     if len(text) <= limit:
         return text
-    return text[: limit - 1].rstrip("，,。.;；:： ") + "…"
+    return text[: limit - 1].rstrip(",.;: ") + "…"
 
 
 def _gallery_item_title(raw_item: dict[str, Any]) -> str:

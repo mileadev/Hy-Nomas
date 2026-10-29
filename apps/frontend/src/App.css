@@ -10,7 +10,7 @@
   --violet-soft: #eceafd;
   --coral: #ff6f51;
   --acid: #c8f259;
-  --sans: 'Tencent Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --serif: 'Newsreader', Georgia, serif;
   --mono: 'DM Mono', monospace;
 }

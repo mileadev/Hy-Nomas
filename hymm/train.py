@@ -13,6 +13,7 @@ import gc
 import json
 import math
 import os
+from hymm.utils.config_values import checkpoint_ratio
 import random
 import sys
 import time
@@ -641,7 +642,7 @@ class DefaultTrainer:
 
         gc_enabled = args.parallelism.gradient_checkpointing
         gc_ratio = (
-            float(eval(str(getattr(args.parallelism, "selective_checkpointing", 1.0))))
+            checkpoint_ratio(getattr(args.parallelism, "selective_checkpointing", 1.0))
             if gc_enabled
             else 0.0
         )

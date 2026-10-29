@@ -26,7 +26,7 @@ jobs:
       - name: Verify English-only tracked text
         run: python scripts/audit/english_check.py
       - name: Validate providers, preflight and caption schemas
-        run: python -m pytest -q tests/inference/test_pe_providers.py tests/inference/test_local_doctor.py tests/inference/test_caption_english.py tests/inference/test_caption_provider.py tests/inference/test_security_defaults.py
+        run: python -m pytest -q tests/inference/test_pe_providers.py tests/inference/test_local_doctor.py tests/inference/test_caption_english.py tests/inference/test_caption_provider.py tests/inference/test_security_defaults.py tests/inference/test_config_values.py
       - name: Shell syntax checks
         run: bash -n scripts/local/run.sh scripts/inference/start_seg_ar_demo.sh scripts/inference/run_seg_ar_gateway.sh
   frontend:
@@ -46,6 +46,18 @@ jobs:
       - name: Production dependency advisory scan
         continue-on-error: true
         run: npm --prefix apps/frontend audit --omit=dev --audit-level=high
+
+      - name: Capture full frontend dependency advisories
+        if: always()
+        run: |
+          mkdir -p audit-results
+          npm --prefix apps/frontend audit --json > audit-results/npm-audit.json || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-audit-results
+          path: audit-results/npm-audit.json
+          retention-days: 30
 
   security:
     runs-on: ubuntu-latest

@@ -31,7 +31,10 @@ hf download tencent/Hy-Nomas --local-dir /path/to/Hy-Nomas
 npm --prefix apps/frontend ci
 ~~~
 
-The CUDA 13 Python environment builds native attention kernels. The original
+The CUDA 13 Python environment builds native attention kernels.
+The legacy standalone Gradio UI is optional: install it with
+python -m pip install -e '.[gradio-ui]' and validate its major-version
+compatibility before hosted deployment. The original
 Docker image is another option; review [Dockerfile](docker/Dockerfile) and
 [apps/README.md](apps/README.md) for container setup. Bedrock requires:
 python -m pip install -e '.[pe-bedrock]'.

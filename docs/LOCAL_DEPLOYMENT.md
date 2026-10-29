@@ -34,6 +34,10 @@ With --probe, Ollama/SGLang model discovery is checked. For Bedrock,
 the preflight verifies the SDK and Region only; no billable model call.
 An actual generation must be tested separately.
 
+Standalone Gradio is not part of the default web demo. When explicitly
+needed, install python -m pip install -e '.[gradio-ui]' and validate Gradio 6
+behavior independently; the supported local interface is React/FastAPI.
+
 For Bedrock install the extra dependency:
 
 ~~~bash

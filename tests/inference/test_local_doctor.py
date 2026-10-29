@@ -50,3 +50,17 @@ def test_unknown_mode_rejected(monkeypatch, tmp_path):
     monkeypatch.setenv("Hy_Nomas_Model_Path", str(tmp_path))
     monkeypatch.setenv("NOMAS_RUN_MODE", "invalid")
     assert any("NOMAS_RUN_MODE" in e for e in doctor.check(require_model_files=True))
+
+
+def test_disallows_local_file_scheme(monkeypatch):
+    monkeypatch.setenv("PE_PROVIDER", "ollama-local")
+    monkeypatch.setenv("PE_MODEL", "vision")
+    monkeypatch.setenv("PE_API_URL", "file:///etc")
+    assert any("HTTP(S)" in error for error in doctor.check())
+
+
+def test_rejects_embedded_url_credentials(monkeypatch):
+    monkeypatch.setenv("PE_PROVIDER", "ollama-local")
+    monkeypatch.setenv("PE_MODEL", "vision")
+    monkeypatch.setenv("PE_API_URL", "http://alice:secret@127.0.0.1:11434/v1")
+    assert any("URL credentials" in error for error in doctor.check())

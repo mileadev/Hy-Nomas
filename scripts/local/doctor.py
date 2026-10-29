@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import sys
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 PROVIDERS = {"sglang", "ollama", "ollama-local", "ollama-cloud", "bedrock"}
@@ -49,6 +50,15 @@ def check(require_model_files: bool = False, probe: bool = False) -> list[str]:
         if not base.endswith("/v1"):
             base += "/v1"
         endpoint = base + "/models"
+    if provider != "bedrock":
+        parsed_endpoint = urlsplit(endpoint)
+        if (
+            parsed_endpoint.scheme not in {"http", "https"}
+            or not parsed_endpoint.hostname
+            or parsed_endpoint.username is not None
+            or parsed_endpoint.password is not None
+        ):
+            errors.append("PE_API_URL must resolve to an HTTP(S) service without URL credentials")
     if require_model_files:
         path = os.getenv("Hy_Nomas_Model_Path")
         if not path:
@@ -87,7 +97,7 @@ def check(require_model_files: bool = False, probe: bool = False) -> list[str]:
                 key = os.getenv("PE_API_KEY")
             if key:
                 headers["Authorization"] = "Bearer " + key
-            with urlopen(Request(endpoint, headers=headers), timeout=5) as response:
+            with urlopen(Request(endpoint, headers=headers), timeout=5) as response:  # nosec B310: validated HTTP(S) URL
                 data = json.load(response)
             ids = {
                 item.get("id") for item in data.get("data", [])

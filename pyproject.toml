@@ -30,7 +30,7 @@ dependencies = [
     "scipy==1.14.1",
     "scikit-learn==1.5.2",
     "h5py==3.12.1",
-    "pyarrow==22.0.0",
+    "pyarrow==23.0.1",
     
     # Configuration/Serialization
     "pyyaml==6.0.1",
@@ -42,28 +42,28 @@ dependencies = [
     # Web/API
     "fastapi==0.115.3",
     "uvicorn==0.32.0",
-    "gradio==5.3.0",
+    
     "pydantic==2.9.2",
-    "aiohttp==3.13.2",
+    "aiohttp==3.14.4",
     "aiofiles==23.2.1",
     "websockets==12.0",
     
     # Utilities
     "beautifulsoup4==4.12.3",
     "ftfy==6.3.0",
-    "gdown==5.2.0",
+    "gdown==5.2.2",
     "huggingface-hub==0.36.0",
-    "idna==3.6",
+    "idna==3.15",
     "loguru==0.7.3",
     "matplotlib==3.9.2",
     "pydub==0.25.1",
     "regex==2024.9.11",
-    "requests==2.32.5",
+    "requests==2.33.0",
     "sentencepiece==0.2.1",
     "six==1.16.0",
     "tabulate==0.9.0",
     "urllib3==2.8.0",
-    "wheel==0.44.0",
+    "wheel==0.46.2",
     "pycryptodome==3.23.0",
     "webdataset==1.0.2",
     
@@ -77,6 +77,9 @@ dependencies = [
 
 # Install the complete environment with: uv sync --extra all
 [project.optional-dependencies]
+# Standalone Gradio UI is optional; the supported web demo is React + FastAPI.
+# Gradio 6 requires its own compatibility smoke test before hosted use.
+gradio-ui = ["gradio==6.30.0"]
 pe-bedrock = ["boto3>=1.34,<2"]
 deprecated = [
     # These packages are shown in early requirements, but no longer need

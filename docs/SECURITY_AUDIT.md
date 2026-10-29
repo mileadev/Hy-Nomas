@@ -22,14 +22,14 @@ container images and cloud accounts are outside current test coverage.
 | HY-03 | High | Pickle deserialization in training checkpoint scalar and RNG restore can execute attacker-supplied code | Restore requires NOMAS_TRUST_PICKLE_CHECKPOINTS=1; optimizer load uses weights_only=True | Only enable trusted legacy checkpoints; convert to safe typed storage for a future format migration |
 | HY-04 | High | Unauthenticated local Gateway endpoints can read and operate on sessions, generated media and prompt-enhancer transcripts | Localhost-only default; session and output directories restricted; deployment guide warns not to publish | Not multi-tenant authorization; production must add authenticated per-user enforcement before exposing |
 | HY-05 | High | SGLang launcher implicitly enabled --trust-remote-code | Remote code opt-in via PE_TRUST_REMOTE_CODE; non-loopback PE_HOST requires PE_API_KEY | Native model/kernels and checkpoint provenance still require verification |
-| HY-06 | Medium | Requests/urllib3 pinned to obsolete releases | Bumped requests to 2.32.5 and urllib3 to 2.8.0 | Pin compatibility and transitive vulnerabilities require dependency scanning |
+| HY-06 | Medium | Requests/urllib3 pinned to obsolete releases | Bumped requests to 2.33.0 and urllib3 to 2.8.0 | Pin compatibility and transitive vulnerabilities require dependency scanning |
 | HY-07 | Medium | Proxy accepted very large uploads without bounded request time | Auth proxy body limit defaults to 512 MiB with configurable cap and request timeout; Node proxy request timeout finite | Direct gateway uploads and GPU job admission still need configured quotas |
 | HY-08 | Medium | Runtime files, lock/credential files and PE transcripts risked permissive access or symlink abuse | Private transcript directories, chmod 0600 lock files, O_NOFOLLOW queue lock, local launcher umask, credential symlink checks | Multi-host shared-volume security and filesystem semantics need separate validation |
 | HY-09 | Medium | Inference launcher forced bond1/InfiniBand network interfaces and disabled NCCL checks | Removed mandatory cluster NIC overrides; allow the runtime and operators to select interfaces | Multi-node NCCL performance and failover require hardware regression tests |
 | HY-10 | Medium | Chinese-only documentation, training annotation output and UI/font assets, mixed-language runtime strings | English-only caption schema and examples; removed translated docs/assets; translated runtime strings; CI language check | Preserve legal LICENSE/third-party notices unchanged; previous historical commits remain available |
 | HY-11 | Medium | External Ollama/Bedrock input and output model schemas vary; sending user video frames to cloud can leak data if unapproved | Explicit provider selection, fixed HTTPS Ollama Cloud URL, Bedrock Converse adapter and structured JSON validation | Only use approved models/data; no remote account, pricing or vision E2E test performed |
 | HY-12 | Medium | Extremely long and stale README/how-to documents included broken links and superseded deployment guidance | Compact root and frontend READMEs; dedicated deployment guide; repaired links | Revisit usage docs after full CUDA test |
-| HY-13 | Medium | Standalone Gradio dependency version and multiple native ML packages may contain unfixed vulnerabilities | Dependency advisory scan in CI; no blind major-version upgrade | Gradio version migration and all native packages require compatibility/testing; do not treat them as cleared |
+| HY-13 | High | Core Python manifest included 105 vulnerability records (58 distinct IDs) over seven packages, including obsolete Gradio 5.3.0 and aiohttp 3.13.2 | Updated pyarrow, aiohttp, gdown, idna, requests and wheel to advisory-fixed releases; removed Gradio from the default runtime, offering current Gradio 6 as an opt-in UI extra | Re-run dependency audit for core and extras; CUDA/Gradio 6 compatibility and dependencies still require functional testing |
 | HY-14 | Low | Demo dispatcher cookie had Secure=false even when HTTPS is deployed | Introduce NOMAS_COOKIE_SECURE for HTTPS termination | Default remains false for loopback HTTP; require true for HTTPS |
 | HY-15 | Medium | Filesystem media sharing and PE-export endpoints are intended for demo/single trust domain | No direct Internet exposure; recommended external authz gateway | Multi-user isolation still not verified; security-critical for hosted production |
 
@@ -92,3 +92,20 @@ Manual acceptance on a compatible NVIDIA Linux GPU and provider identity:
   penetration test before making the service Internet-facing.
 
 For vulnerability disclosure see [SECURITY.md](../SECURITY.md).
+
+## Dependency advisory baseline
+
+The initial GitHub Actions pip-audit found **105 vulnerability records** in
+**7 pinned packages**; the report contained repeat records for some
+advisory IDs, representing 58 distinct IDs. A separate Bandit scan found
+**392 findings** (362 low, 30 medium), many in tests or with context-specific
+risk. Source-level review is required to triage each result; none of these
+counts equals the number of confirmed exploitable defects. The initial
+advisory artifact is retained in the PR workflow run history.
+
+The following pinned packages were advanced to upstream advised fixes:
+pyarrow 23.0.1; aiohttp 3.14.4; gdown 5.2.2; idna 3.15;
+requests 2.33.0; wheel 0.46.2. Gradio 5.3.0 was removed from default
+installation: opt into the Gradio 6 UI dependency only when using the
+standalone interface. Its runtime compatibility has not been established.
+Dependency/version choices must be validated in a real GPU environment.

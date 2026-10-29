@@ -2785,7 +2785,7 @@ class DefaultTrainer:
             if isinstance(loss_dict_or_terms, dict) and "t" in loss_dict_or_terms:
                 _t_val = loss_dict_or_terms["t"]
 
-                # 统一处理逻辑：统计每个bin中的样本数量，不取平均值
+                # Count samples in each bin instead of taking a simple average.
                 _t_bins = [(0.0, 0.2), (0.2, 0.4), (0.4, 0.6), (0.6, 0.8), (0.8, 1.0)]
 
                 # ----- Preferred path: exact per-token loss & per-token t -----
@@ -2841,7 +2841,7 @@ class DefaultTrainer:
                                 cycle_states.running_count_by_t_bin[_bin_key] += _cnt
                 # ----- Fallback: only step-mean loss + t tensor available -----
                 elif hasattr(_t_val, "item") and _t_val.dim() == 0:
-                    # 标量t值：当作单个样本处理
+                    # Treat a scalar timestep as one sample.
                     _t_scalar = _t_val.item()
                     for _bi, (_lo, _hi) in enumerate(_t_bins):
                         if _lo <= _t_scalar < _hi or (
@@ -2852,14 +2852,14 @@ class DefaultTrainer:
                             cycle_states.running_count_by_t_bin[_bin_key] += 1
                             break
                 else:
-                    # 张量t值：没有 per-token loss，只能用 step-mean 当作每个
-                    # 命中样本的代表 loss 累加 loss*bin_count，
-                    # _avg = sum_loss/sum_count 是命中频次加权的 step-mean，
-                    # 反映 t-bin 上长期 loss 水平（近似，非精确）。
+                    # Tensor timesteps have no per-token loss; attribute the step mean
+                    # to each matching sample and accumulate loss * bin_count.
+                    # The average is the frequency-weighted step mean,
+                    # an approximation of long-term loss per timestep bin.
                     _t_flat = _t_val.flatten()
 
                     for _bi, (_lo, _hi) in enumerate(_t_bins):
-                        # 计算当前bin中的样本数
+                        # Count samples currently in this bin.
                         if _bi < len(_t_bins) - 1:
                             _in_bin_mask = (_t_flat >= _lo) & (_t_flat < _hi)
                         else:

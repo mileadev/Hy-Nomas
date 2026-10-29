@@ -57,7 +57,7 @@ def generate_forward_trajectory(num_frames=33, step_size=0.08):
     """
     Generate a straight forward trajectory (camera moves along +Z axis).
 
-    相机沿着 Z 轴向前移动。
+    Camera moves forward along +Z.
     """
     poses = {}
     K = make_intrinsic()
@@ -74,7 +74,7 @@ def generate_circular_trajectory(num_frames=33, radius=1.0, height=0.0):
     """
     Generate a circular trajectory around the origin.
 
-    相机绕原点做圆周运动，始终朝向中心。
+    Camera orbits the origin while always looking toward its center.
     OpenCV: +X=right, +Y=down, +Z=forward
     """
     poses = {}
@@ -103,7 +103,7 @@ def generate_spiral_trajectory(
     """
     Generate a spiral trajectory going downward while circling.
 
-    相机螺旋下降（+Y=down），同时绕原点旋转。
+    Camera spirals downward (+Y is down) while orbiting the origin.
     """
     poses = {}
     K = make_intrinsic()
@@ -131,11 +131,11 @@ def generate_pan_left_trajectory(num_frames=33, total_angle=45.0, step_size=0.0)
     """
     Generate a pan left trajectory (camera rotates left around Y axis).
 
-    相机原地向左旋转（yaw left）。
-    OpenCV (+X=right, +Y=down, +Z=forward): c2w 的第三列就是相机 forward
-    在世界系下的方向。`R_y(a) @ (0,0,1) = (sin a, 0, cos a)`，所以
-    `a > 0` 会让 forward 偏向世界 +X（右） = pan_right；要 pan_left
-    必须用负角度。
+    Camera rotates left in place (negative yaw).
+    OpenCV (+X=right, +Y=down, +Z=forward): the third c2w column
+    is the forward direction in world coordinates. R_y(a) rotates +Z
+    toward world +X for positive a (pan right), so pan left
+    requires a negative angle.
     """
     poses = {}
     K = make_intrinsic()
@@ -154,9 +154,9 @@ def generate_pan_right_trajectory(num_frames=33, total_angle=45.0, step_size=0.0
     """
     Generate a pan right trajectory (camera rotates right around Y axis).
 
-    相机原地向右旋转（yaw right）。
-    OpenCV: `R_y(+a) @ (0,0,1) = (sin a, 0, cos a)`，正角度让相机 forward
-    偏向世界 +X（右） = pan_right。
+    Camera rotates right in place (positive yaw).
+    OpenCV: R_y(+a) sends the forward direction toward positive X
+    (right), corresponding to pan right.
     """
     poses = {}
     K = make_intrinsic()
@@ -175,9 +175,9 @@ def generate_tilt_up_trajectory(num_frames=33, total_angle=30.0):
     """
     Generate a tilt up trajectory (camera rotates up around X axis).
 
-    相机原地向上抬头（pitch up）。
-    OpenCV: `R_x(+a) @ (0,0,1) = (0, -sin a, cos a)`，正角度让 forward 的
-    Y 分量为负；OpenCV 中 +Y=down，所以 -Y=up，即相机看向上 = tilt_up。
+    Camera rotates upward in place (positive pitch).
+    OpenCV: R_x(+a) yields a negative Y forward component.
+    Since OpenCV positive Y points downward, negative Y points up.
     """
     poses = {}
     K = make_intrinsic()
@@ -196,9 +196,9 @@ def generate_tilt_down_trajectory(num_frames=33, total_angle=30.0):
     """
     Generate a tilt down trajectory (camera rotates down around X axis).
 
-    相机原地向下低头（pitch down）。
-    OpenCV: `R_x(-a) @ (0,0,1) = (0, sin a, cos a)`，负角度让 forward 的
-    Y 分量为正（+Y=down），即相机看向下 = tilt_down。
+    Camera rotates downward in place (negative pitch).
+    OpenCV: R_x(-a) yields a positive Y forward component.
+    Positive Y points down in OpenCV, hence this tilts down.
     """
     poses = {}
     K = make_intrinsic()
@@ -217,7 +217,7 @@ def generate_dolly_zoom_trajectory(num_frames=33, start_z=0.0, end_z=2.0):
     """
     Generate a dolly (push in) trajectory.
 
-    相机沿着 Z 轴推进（dolly in）。
+    Camera moves forward along its dolly path.
     """
     poses = {}
     K = make_intrinsic()
@@ -237,7 +237,7 @@ def generate_crane_up_trajectory(num_frames=33, height_change=1.0):
     """
     Generate a crane up trajectory (camera moves upward in world).
 
-    相机垂直向上移动（crane shot）。
+    Camera translates vertically upward (crane shot).
     OpenCV: +Y=down, so moving up = negative Y
     """
     poses = {}
@@ -258,7 +258,7 @@ def generate_crane_down_trajectory(num_frames=33, height_change=1.0):
     """
     Generate a crane down trajectory (camera moves downward in world).
 
-    相机垂直向下移动。
+    Camera translates vertically downward.
     OpenCV: +Y=down
     """
     poses = {}
@@ -279,7 +279,7 @@ def generate_truck_left_trajectory(num_frames=33, distance=1.0):
     """
     Generate a truck left trajectory (camera moves left).
 
-    相机向左平移（truck left）。
+    Camera translates sideways toward the left.
     OpenCV: +X=right, so left = negative X
     """
     poses = {}
@@ -300,7 +300,7 @@ def generate_truck_right_trajectory(num_frames=33, distance=1.0):
     """
     Generate a truck right trajectory (camera moves right).
 
-    相机向右平移（truck right）。
+    Camera translates sideways toward the right.
     OpenCV: +X=right
     """
     poses = {}
@@ -321,7 +321,7 @@ def generate_arc_trajectory(num_frames=33, radius=2.0, arc_angle=90.0):
     """
     Generate an arc trajectory (camera moves in an arc while looking at origin).
 
-    相机沿弧线移动，始终看向原点。
+    Camera follows an arc while looking at the origin.
     """
     poses = {}
     K = make_intrinsic()
@@ -351,7 +351,7 @@ def generate_zigzag_trajectory(num_frames=33, amplitude=0.5, forward_speed=0.1):
     """
     Generate a zigzag trajectory (camera moves forward while oscillating left-right).
 
-    相机前进的同时左右摆动。
+    Camera moves forward while swaying sideways.
     """
     poses = {}
     K = make_intrinsic()
@@ -374,7 +374,7 @@ def generate_random_walk_trajectory(
     """
     Generate a random walk trajectory.
 
-    相机随机游走。
+    Camera follows a random-walk trajectory.
     """
     np.random.seed(seed)
     poses = {}

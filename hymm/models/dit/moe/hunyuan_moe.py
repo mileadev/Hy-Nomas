@@ -292,7 +292,7 @@ class HunYuanMoE(nn.Module):
         if self.config.use_mixed_mlp_moe:
             hidden_states_mlp = self.shared_mlp(hidden_states, attn_out)
 
-        # TODO(jef, gate 是否有必要传入attn_out当使用HunYuanMLP2时)
+        # TODO(jef): Check whether the gate needs attn_out with HunYuanMLP2.
         l_moe, combine_weights, dispatch_mask, exp_counts = self.gate(hidden_states)
 
         reshaped_input = hidden_states.reshape(-1, hidden_size)

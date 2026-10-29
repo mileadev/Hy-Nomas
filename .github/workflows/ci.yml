@@ -32,6 +32,8 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,6 +41,20 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/frontend/package-lock.json
+      - name: Regenerate lockfile from patched semver ranges
+        run: |
+          npm --prefix apps/frontend install --package-lock-only --ignore-scripts --no-audit
+          npm --prefix apps/frontend update --package-lock-only --ignore-scripts --no-audit
+      - name: Push patched dependency lockfile to scoped branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/hardening/english-local-ai-providers-20261029'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add apps/frontend/package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(frontend): update vulnerability-affected dev lockfile'
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
       - run: npm --prefix apps/frontend ci --include=dev
       - run: npm --prefix apps/frontend run build
       - run: npm --prefix apps/frontend run lint

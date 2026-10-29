@@ -1,14 +1,10 @@
-# In-Context Final Output Examples
+# English Caption Examples
 
-The following two examples demonstrate only the required final-turn output schema, exact Subject-token usage, Action and Camera wrapper formatting, bilingual structural alignment, chronological segment organization, and the required language-specific `description_change` prefixes.
-
-These examples do **not** describe the current video. Never copy or infer their subjects, identities, attributes, actions, camera motions, timestamps, segment counts, scene details, wording, or other facts into the current output. During first and intermediate turns, continue to follow the required turn-local draft schema; do not output the complete bilingual final schema early. Use these examples only as formatting and annotation-pattern references when producing the final summary.
-
-Every current video must be analyzed independently from its own visible evidence. The current video supplied segment boundaries remain authoritative.
+Two structural examples for final-turn English captions, subject/action/camera tokens and segment boundaries. Do not infer any content about the current video from these examples.
 
 ## Example 1
 
-```json
+~~~json
 {
   "english_json": {
     "perspective_view": "third-person observer",
@@ -50,54 +46,13 @@ Every current video must be analyzed independently from its own visible evidence
         ]
       }
     ]
-  },
-  "chinese_json": {
-    "perspective_view": "third-person observer",
-    "Style": "真实视频",
-    "subject_list": [
-      {
-        "subject_id": "<|Subject1|>",
-        "display_name": "处理绿色茎秆的成年人",
-        "subject_attribute": "浅肤色的前臂和手从黑色长袖衣物中露出；面部和身体始终位于画面之外。"
-      }
-    ],
-    "segments": [
-      {
-        "start_time": "00:00.000",
-        "end_time": "00:12.680",
-        "visual_description_long": "特写镜头呈现一个大型浅白色塑料容器的内部及其正上方空间。左下角散放着一堆深色、不规则的叶状植物材料，处于失焦状态。黑色横向结构占据左上方背景，右侧边缘则间歇出现模糊的蓝灰色区域。数根表面光滑的绿色短茎占据中央前景，可见浅色纤维状内部和参差不齐的裂口。柔和且近似自然的光线配合浅景深，突出了撕裂的纤维和细微的表面纹理。<Camera1>外部机位保持略微俯视的侧面角度，仅有轻微的手持漂移和焦点柔化，没有明显重新构图</Camera1>。 裂开的末端逐渐露出浅色条状物，背景中的深色材料堆保持静止。 多根茎秆此时显露出尖锐的碎裂端部，以及绿色表层下方的浅色内部。 材料束变得更加紧凑，缩短的绿色茎段朝不同方向伸出。 特写结束时，容器上方仍可见数个直立的绿色末端和浅色撕裂薄片。",
-        "description_change": null,
-        "contained_actions": [
-          {
-            "start_time": "00:00.000",
-            "end_time": "00:03.000",
-            "action_description": "<Action1><|Subject1|>握住数根绿色茎秆，捏起松散的外层，弯折单根材料，并在容器上方将其分开</Action1>。"
-          },
-          {
-            "start_time": "00:03.000",
-            "end_time": "00:06.000",
-            "action_description": "<Action2><|Subject1|>分别抓住茎秆，拉掉纤维状外皮，转动材料，并将剥过的部分收拢成一小束</Action2>。"
-          },
-          {
-            "start_time": "00:06.000",
-            "end_time": "00:09.500",
-            "action_description": "<Action3><|Subject1|>整理成束的材料，在不同抓握位置之间转移各段，并反复摘除或撕掉悬垂的细纤维</Action3>。"
-          },
-          {
-            "start_time": "00:09.500",
-            "end_time": "00:12.680",
-            "action_description": "<Action4><|Subject1|>提起一小段材料，将其放回材料束，捏住另一处裂口，并继续整理和清除剩余茎秆上的碎屑</Action4>。"
-          }
-        ]
-      }
-    ]
   }
 }
-```
+~~~
 
 ## Example 2
 
-```json
+~~~json
 {
   "english_json": {
     "perspective_view": "third-person observer",
@@ -200,108 +155,6 @@ Every current video must be analyzed independently from its own visible evidence
         ]
       }
     ]
-  },
-  "chinese_json": {
-    "perspective_view": "third-person observer",
-    "Style": "真实视频",
-    "subject_list": [
-      {
-        "subject_id": "<|Subject1|>",
-        "display_name": "身穿防护服的操作员",
-        "subject_attribute": "一名成人体型的操作员，身穿厚重的橄榄绿色防护服，配有软垫兜帽、圆形头盔、透明面罩、深色手套、黑色束带以及连接的软管或线缆；最初站在抬高的种植池旁，手持一根绿色与黑色相间的长杆朝向检测设备。"
-      },
-      {
-        "subject_id": "<|Subject2|>",
-        "display_name": "较年轻的GATE警员",
-        "subject_attribute": "一名较年轻的成年男子，戴着带有黄色GATE字样的黑色帽子，身穿修身黑色短袖上衣、深色迷彩长裤和黑色靴子，系有装备腰带并佩戴耳机；最初与另一名GATE警员并排站在阳光照射的停车场中。"
-      },
-      {
-        "subject_id": "<|Subject3|>",
-        "display_name": "手持麦克风的年长GATE警员",
-        "subject_attribute": "一名留有灰色短发的年长成年男子，戴着带有黄色GATE字样的黑色帽子，在深色迷彩制服外穿着标有GATE字样的黑色防护背心，并穿着黑色靴子；最初手持一支带标志的麦克风站在较年轻的警员旁边。"
-      }
-    ],
-    "segments": [
-      {
-        "start_time": "00:00.000",
-        "end_time": "00:08.000",
-        "visual_description_long": "一片阳光照射的室外泥土地位于一面浅米色围墙旁，墙顶设有成圈的铁丝。墙上安装着一块褪色的矩形告示或徽记。树干和抬高的种植池占据左侧阴影区域，干树叶、石块、细枝和裸露管道散布在凹凸不平的地面上。强烈阳光在墙面和泥土上投下边缘清晰的阴影。 长杆斜向延伸至位于黑色矩形面板前方的一套紧凑机械组件。<Camera1>手持摄影机从中景向前移动并向右摇摄，沿着长杆移向设备，同时逐渐收紧构图</Camera1>。 带提手的面板上有白色“VIDISCO”和“BlazeX”字样、四个角部定位标记以及中央十字准线。一套带有数个细长悬挂部件的金属机构紧邻面板前方，由细支架和白色软垫底座支撑。一根弯曲线缆从面板区域延伸至画面右侧边缘。<Camera2>摄影机推进至长杆尖端、机械组件和标记面板的近景，并伴有轻微的手持抖动</Camera2>。一个小型橄榄色盒状装置出现在下方前景地面上，带有深色圆形前端、顶部红色按钮、黄色标记和一根短线缆。装置和面板周围的泥地上延伸着长长的阴影。<Camera3>摄影机随后略微后退并向左移动，扩大画面以纳入更多长杆和前景装置，同时将面板与机械组件保留在右侧</Camera3>。",
-        "description_change": null,
-        "contained_actions": [
-          {
-            "start_time": "00:00.000",
-            "end_time": "00:02.000",
-            "action_description": "<Action1><|Subject1|>站在左侧前景，身穿带软垫兜帽、头盔、透明面罩、深色手套、黑色束带以及连接软管或线缆的厚重橄榄绿色防护服，并用双手握住一根绿色与黑色相间的长杆</Action1>。"
-          },
-          {
-            "start_time": "00:02.000",
-            "end_time": "00:08.000",
-            "action_description": "<Action2><|Subject1|>保持长杆远端对准机械组件，并在不松开双手握持的情况下进行小幅、受控的位置调整</Action2>。"
-          }
-        ]
-      },
-      {
-        "start_time": "00:08.000",
-        "end_time": "00:21.000",
-        "visual_description_long": null,
-        "description_change": "与前一片段相比，画面离开墙边的检测装置，转而展现一处带黄色标线的铺装停车场，其中排列着深色和浅色车辆、枝叶茂盛的树木、数名远处的制服人员以及一栋浅色大型建筑，强烈逆光和绿色镜头光斑覆盖画面。 <Camera1>手持摄影机沿长杆快速向左摇摄，掠过抬高的种植池和建筑转角，转入相邻的停车场</Camera1>。面板和地面上的小型装置离开画面，停放的车辆占据前景和背景。<Camera2>摄影机带着明显抖动穿过停车场向前移动，远处建筑后方的低角度阳光产生强烈光斑</Camera2>。 <Camera3>摄影机从停车场广角画面推进至腰部以上的双人中景</Camera3>。 <Camera4>摄影机进一步靠近并略微向右移动，镜头光斑从画面中穿过</Camera4>。",
-        "contained_actions": [
-          {
-            "start_time": "00:08.000",
-            "end_time": "00:10.000",
-            "action_description": "<Action1><|Subject1|>继续用双手握住长杆并保持远端朝向检测面板，随后随着画面转开而消失在视野中</Action1>。"
-          },
-          {
-            "start_time": "00:10.000",
-            "end_time": "00:14.000",
-            "action_description": "<Action2><|Subject2|>戴着黑色GATE帽，身穿修身黑色上衣、迷彩长裤并系有装备腰带、佩戴耳机，一边说话一边用部分伸出的右手向前指示；<|Subject3|>戴着黑色GATE帽，身穿深色迷彩制服和带标记的防护背心站在旁边，同时将带标志的麦克风举向<|Subject2|></Action2>。"
-          },
-          {
-            "start_time": "00:14.000",
-            "end_time": "00:17.500",
-            "action_description": "<Action3><|Subject2|>继续说话，并在胸前高度交替做出捏指手势和张开手掌的动作，而<|Subject3|>稳定握住麦克风并专注观看</Action3>。"
-          },
-          {
-            "start_time": "00:17.500",
-            "end_time": "00:21.000",
-            "action_description": "<Action4><|Subject2|>将右臂完全伸过前景以指示画外右侧区域，随后开始收回手臂并继续做出较小的解释性手势；<|Subject3|>将视线转向所指方向，并让麦克风保持在<|Subject2|>与<|Subject3|>之间</Action4>。"
-          }
-        ]
-      },
-      {
-        "start_time": "00:21.000",
-        "end_time": "00:35.969",
-        "visual_description_long": null,
-        "description_change": "与前一片段相比，可见场景、背景和其他物体的布局在实质上保持不变。 <Camera1>手持摄影机维持近距离双人画面，伴有轻微横向漂移，左上方阳光持续产生绿色镜头光斑</Camera1>。 <Camera2>构图轻微向右摇摄并扩大，显露出停放车辆之间的更多空间</Camera2>。 <Camera3>摄影机从麦克风一侧靠近双人画面，同时保留右侧背景中的停车场活动</Camera3>。",
-        "contained_actions": [
-          {
-            "start_time": "00:21.000",
-            "end_time": "00:24.500",
-            "action_description": "<Action1><|Subject2|>继续说话，在胸前高度做出小幅捏指和张开手掌的手势，同时望向画外右侧；<|Subject3|>保持麦克风朝向<|Subject2|>并注视同一区域</Action1>。"
-          },
-          {
-            "start_time": "00:24.500",
-            "end_time": "00:27.500",
-            "action_description": "<Action2><|Subject2|>再次向外挥动右手后将其放低，而<|Subject3|>把注意力进一步转向右侧，并将麦克风收至更靠近胸前的位置</Action2>。"
-          },
-          {
-            "start_time": "00:27.500",
-            "end_time": "00:30.500",
-            "action_description": "<Action3><|Subject1|>从右侧背景进入，双手水平携带长杆向左行走；<|Subject2|>停止较大幅度的手势并看向该处活动，而<|Subject3|>转向<|Subject2|>并举起麦克风开始回应</Action3>。"
-          },
-          {
-            "start_time": "00:30.500",
-            "end_time": "00:33.000",
-            "action_description": "<Action4><|Subject3|>对着麦克风说话，并用空闲的手做动作，在张开手掌与向下指示停车场之间交替；<|Subject2|>面向<|Subject3|>聆听；<|Subject1|>停在右侧背景，水平稳住长杆，并短暂抬起一只手靠近头盔或面罩</Action4>。"
-          },
-          {
-            "start_time": "00:33.000",
-            "end_time": "00:35.969",
-            "action_description": "<Action5><|Subject3|>继续说话，指向右侧，并以一次水平扫动手势结束；<|Subject2|>放低双手保持专注；<|Subject1|>保持双腿分开的站姿，在将长杆横持于身前的同时小幅调整长杆角度</Action5>。"
-          }
-        ]
-      }
-    ]
   }
 }
-```
+~~~

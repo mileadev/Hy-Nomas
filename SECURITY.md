@@ -2,7 +2,7 @@
 
 ## Report a vulnerability privately
 
-Email **hy_nomas@tencent.com**, the project contact listed in [README.md](README.md#contact-us), with a subject such as **[Hy-Nomas Security] Brief description**. Reports may be written in English or Chinese.
+Email **hy_nomas@tencent.com**, the project contact listed in [README.md](README.md#contact-us), with a subject such as **[Hy-Nomas Security] Brief description**. Reports should be written in English.
 
 Do not open a public issue or pull request containing an unpatched vulnerability, exploit details, credentials, or private user data. This mailbox is the documented reporting route; do not assume repository-host private advisory reporting is enabled.
 

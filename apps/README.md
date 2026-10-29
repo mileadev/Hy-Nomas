@@ -4,7 +4,7 @@ Generate and extend videos with text or camera paths. Run commands from the repo
 
 ## 1. Prepare the environment and models
 
-Follow the [Python environment setup](../README.md#environment-setup) (also available in [Chinese](../README_CN.md#环境配置)) and activate your environment. Complete the Python installation before installing frontend dependencies. You also need Node.js 22.x (≥22.12), npm, and compatible **FlashAttention 2, FlashAttention 3, and MagiAttention** builds. Keep the CUDA Toolkit and compiler available in the launch environment for JIT compilation.
+Follow the [Python environment setup](../README.md#environment-setup) and activate your environment. Complete the Python installation before installing frontend dependencies. You also need Node.js 22.x (≥22.12), npm, and compatible **FlashAttention 2, FlashAttention 3, and MagiAttention** builds. Keep the CUDA Toolkit and compiler available in the launch environment for JIT compilation.
 
 The demo uses the FFmpeg executable provided by `imageio-ffmpeg`. A separate system FFmpeg installation is optional if this executable works; `ffprobe` is needed by some acceptance tests, not by the basic launch flow. Check it with:
 

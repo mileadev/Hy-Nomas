@@ -69,7 +69,7 @@ Segmentation samples at 2 FPS by default for visual analysis; this does not chan
 
 ## 3. Captioning with Kimi-K3
 
-Kimi-K3 describes each segment in successive visual chat turns, then produces a bilingual summary. English per-segment prompts contain scene context, subjects, visual descriptions, and actions.
+Kimi-K3 describes each segment in successive visual chat turns, then produces a validated English-only summary. English per-segment prompts contain scene context, subjects, visual descriptions, and actions.
 
 ### Start Kimi-K3
 

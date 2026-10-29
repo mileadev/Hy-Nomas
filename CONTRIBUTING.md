@@ -14,7 +14,7 @@ The project license is currently pending; see [License](README.md#license). This
 
 ## Set up a development environment
 
-Follow [Environment Setup](README.md#environment-setup) or [环境配置](README_CN.md#环境配置), then activate the Python environment and run commands from the repository root. The complete environment includes CUDA attention dependencies; some tests still import these packages even when they execute on CPU.
+Follow [Environment Setup](README.md#environment-setup), then activate the Python environment and run commands from the repository root. The complete environment includes CUDA attention dependencies; some tests still import these packages even when they execute on CPU.
 
 The Python test tools are not currently declared in a dedicated development extra. Install them into the activated environment if needed:
 

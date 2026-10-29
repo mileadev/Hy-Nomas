@@ -1200,7 +1200,7 @@ Examples
     )
     p.add_argument("--gpu", type=int, default=0, help="CUDA device index")
     p.add_argument("--port", type=int, default=7860)
-    p.add_argument("--host", type=str, default="0.0.0.0")
+    p.add_argument("--host", type=str, default="127.0.0.1")
     p.add_argument("--share", action="store_true", help="Create public link")
     p.add_argument(
         "--max-queue",

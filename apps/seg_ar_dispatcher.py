@@ -1768,7 +1768,7 @@ def create_dispatcher_app(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="NOMAS multi-host dispatcher")
-    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--state-db", default="/tmp/nomas_seg_ar_resources.json")
     parser.add_argument(

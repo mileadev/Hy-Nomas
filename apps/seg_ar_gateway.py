@@ -26,6 +26,7 @@ from urllib.parse import unquote, urlsplit
 
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -1515,10 +1516,20 @@ def create_gateway_app(
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=cors_origins or ["*"],
+        allow_origins=cors_origins or [],
         allow_credentials=False,
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
+    )
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=[
+            host.strip()
+            for host in os.environ.get(
+                "NOMAS_ALLOWED_HOSTS", "127.0.0.1,localhost,[::1],testserver"
+            ).split(",")
+            if host.strip()
+        ],
     )
 
     @app.get("/health")
@@ -2460,7 +2471,7 @@ def create_gateway_app(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Hy-Nomas lightweight web gateway")
-    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8082)
     parser.add_argument("--job-db", default="/tmp/nomas_seg_ar_jobs.json")
     parser.add_argument(

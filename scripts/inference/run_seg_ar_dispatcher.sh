@@ -51,7 +51,7 @@ if [[ -n "${GALLERY_DIR}" ]]; then
 fi
 
 exec python apps/seg_ar_dispatcher.py \
-  --host 0.0.0.0 \
+  --host "${NOMAS_DISPATCHER_HOST:-127.0.0.1}" \
   --port "${PORT}" \
   --hosts-file "${HOSTS_FILE}" \
   --state-db "${RESOURCE_DB}" \

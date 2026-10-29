@@ -21,7 +21,7 @@ Example (single GPU)::
         +experiment=inference \
         --rollout-type seg_ar \
         --dit-weight /path/to/model.safetensors \
-        --host 0.0.0.0 \
+        --host 127.0.0.1 \
         --port 8000
 
 Example (8-way sequence parallelism)::
@@ -31,7 +31,7 @@ Example (8-way sequence parallelism)::
         +experiment=inference \
         --rollout-type oneshot \
         --dit-weight /path/to/model.safetensors \
-        --host 0.0.0.0 \
+        --host 127.0.0.1 \
         --port 8000
 
 Hydra overrides may be appended directly, for example::
@@ -77,6 +77,7 @@ import torch
 import torch.distributed as dist
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from omegaconf import DictConfig, ListConfig, open_dict
@@ -2497,7 +2498,7 @@ def parse_server_args() -> Tuple[argparse.Namespace, List[str]]:
         "--text-encoder-model",
         help="Hugging Face model ID or local model/tokenizer directory",
     )
-    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument(
         "--output-dir",
@@ -2512,7 +2513,7 @@ def parse_server_args() -> Tuple[argparse.Namespace, List[str]]:
         "--cors-origin",
         action="append",
         default=[],
-        help="Allowed browser origin; repeatable. Defaults to '*'.",
+        help="Allowed browser origin; repeatable. Defaults to no cross-origin access.",
     )
     parser.add_argument(
         "--shutdown-token",
@@ -2778,10 +2779,20 @@ def create_app(
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=cors_origins or ["*"],
+        allow_origins=cors_origins or [],
         allow_credentials=False,
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
+    )
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=[
+            host.strip()
+            for host in os.environ.get(
+                "NOMAS_ALLOWED_HOSTS", "127.0.0.1,localhost,[::1],testserver"
+            ).split(",")
+            if host.strip()
+        ],
     )
 
     @app.get("/health")

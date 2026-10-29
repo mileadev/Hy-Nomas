@@ -7,7 +7,7 @@ import https from 'node:https'
 const backend = new URL(
   process.env.NOMAS_HTTP_PROXY_BACKEND ?? 'http://127.0.0.1:18084',
 )
-const host = process.env.NOMAS_HTTP_PROXY_HOST ?? '0.0.0.0'
+const host = process.env.NOMAS_HTTP_PROXY_HOST ?? '127.0.0.1'
 const port = Number.parseInt(process.env.NOMAS_HTTP_PROXY_PORT ?? '8081', 10)
 const username = process.env.NOMAS_DEMO_USERNAME ?? 'hy'
 const password = process.env.NOMAS_DEMO_PASSWORD ?? ''
@@ -102,7 +102,7 @@ const server = http.createServer((request, response) => {
   request.pipe(upstream)
 })
 
-server.requestTimeout = 0
+server.requestTimeout = 900_000
 server.headersTimeout = 65_000
 server.listen(port, host, () => {
   console.log(`NOMAS auth proxy listening on http://${host}:${port}`)

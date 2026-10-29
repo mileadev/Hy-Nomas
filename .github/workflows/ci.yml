@@ -47,16 +47,21 @@ jobs:
         continue-on-error: true
         run: npm --prefix apps/frontend audit --omit=dev --audit-level=high
 
+      - name: Generate security-updated lockfile in isolated CI worktree
+        if: always()
+        run: |
+          npm --prefix apps/frontend audit fix --package-lock-only --ignore-scripts || true
+          mkdir -p audit-results
+          cp apps/frontend/package-lock.json audit-results/package-lock.json
       - name: Capture full frontend dependency advisories
         if: always()
         run: |
-          mkdir -p audit-results
           npm --prefix apps/frontend audit --json > audit-results/npm-audit.json || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: frontend-audit-results
-          path: audit-results/npm-audit.json
+          path: audit-results/
           retention-days: 30
 
   security:

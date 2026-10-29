@@ -953,7 +953,8 @@ def create_dispatcher_app(
             token,
             httponly=True,
             samesite="lax",
-            secure=False,
+            secure=os.environ.get("NOMAS_COOKIE_SECURE", "false").strip().lower()
+            in {"1", "true", "yes", "on"},
             max_age=int(manager.lease_seconds),
         )
 

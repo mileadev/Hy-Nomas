@@ -2,6 +2,7 @@
 # --single-gpu-low-mem-mode selects configs/experiment/single_gpu_low_mem_inference.yaml.
 # The shared parser forwards the selected preset to the gateway and GPU workers.
 set -euo pipefail
+umask 077
 
 cd "$(dirname "$0")/../.."
 

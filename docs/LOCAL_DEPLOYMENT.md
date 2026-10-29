@@ -81,6 +81,8 @@ bash scripts/inference/stop_seg_ar_demo.sh
 
 - Gateway defaults to loopback. Use an SSH tunnel; avoid exposing unauthenticated
   FastAPI, SGLang or Ollama endpoints to untrusted networks.
+- Set NOMAS_COOKIE_SECURE=1 when terminating HTTPS for the dispatcher;
+  ensure its X-Forwarded-Proto behavior matches the trusted reverse proxy.
 - Apply authentication, TLS, per-user authorization and quotas before
   Internet deployment. Included Basic Auth proxies are only transport helpers.
 - Restrict file permissions and retention for generated videos and PE

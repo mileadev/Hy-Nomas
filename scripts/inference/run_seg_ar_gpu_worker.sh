@@ -6,9 +6,9 @@ cd "$(dirname "$0")/../.."
 source scripts/inference/seg_ar_demo_config.sh
 
 RUNTIME_DIR="${RUNTIME_DIR:-${PWD}/.runtime/seg_ar_demo}"
-JOB_DB="${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}"
+JOB_DB="${JOB_DB:-${RUNTIME_DIR}/jobs.json}"
 WORKER_SLOT="${WORKER_SLOT:-0}"
-WORKER_LOCK="${WORKER_LOCK:-/tmp/nomas_seg_ar_gpu_worker_${WORKER_SLOT}.lock}"
+WORKER_LOCK="${WORKER_LOCK:-${RUNTIME_DIR}/gpu_worker_${WORKER_SLOT}.lock}"
 NNODES="${NNODES:-1}"
 NODE_RANK="${NODE_RANK:-0}"
 NPROC_PER_NODE="${NPROC_PER_NODE:-${SP_SIZE}}"

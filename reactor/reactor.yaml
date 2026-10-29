@@ -32,7 +32,7 @@ build:
   python_requirements: requirements.txt
   # PyTorch's index also carries older CUDA Python/packaging packages.
   build_env:
-    UV_INDEX_STRATEGY: unsafe-best-match
+    UV_INDEX_STRATEGY: first-index
   system_packages:
     - build-essential
     - git

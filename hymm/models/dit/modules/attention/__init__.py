@@ -243,7 +243,7 @@ def sequence_parallel_attention(
     sequence_length = query.size(1)
     encoder_sequence_length = encoder_query.size(1)
 
-    # 短序列用flash3
+    # Use FlashAttention 3 for short sequences.
     # if sequence_length < 20000:
     #    attn_mode = "flash3"
 
@@ -358,7 +358,7 @@ def sequence_parallel_attention(
                 )
             win_size = [1, 1, 1]
         elif thw[0] <= 31:  # 5s x 16 fps / vae 4
-            ssta_topk = ssta_topk // 2  # 5s 视频时，topk减半
+            ssta_topk = ssta_topk // 2  # Halve top-k for five-second video segments.
 
         query = torch.cat([query, encoder_query], dim=1).permute(
             0, 2, 1, 3

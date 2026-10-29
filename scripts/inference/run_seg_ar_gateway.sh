@@ -1,28 +1,36 @@
 #!/bin/bash
 set -euo pipefail
+umask 077
 
 cd "$(dirname "$0")/../.."
 
 source scripts/inference/seg_ar_demo_config.sh
 
-JOB_DB="${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}"
+JOB_DB="${JOB_DB:-${RUNTIME_DIR}/jobs.json}"
 RUNTIME_DIR="${RUNTIME_DIR:-${PWD}/.runtime/seg_ar_demo}"
 PORT="${PORT:-8081}"
-HOST="${NOMAS_GATEWAY_HOST:-0.0.0.0}"
+HOST="${NOMAS_GATEWAY_HOST:-127.0.0.1}"
 
 # Keep API credentials outside the repository while allowing Gateway-only
 # restarts to retain online prompt enhancement.
 PE_CREDENTIAL_FILE="${PE_CREDENTIAL_FILE:-${RUNTIME_DIR}/pe_gateway.env}"
+if [[ -L "${PE_CREDENTIAL_FILE}" ]]; then
+  echo "Refusing symlink PE_CREDENTIAL_FILE" >&2
+  exit 2
+fi
 if [[ -f "${PE_CREDENTIAL_FILE}" ]]; then
-  chmod 600 "${PE_CREDENTIAL_FILE}" 2>/dev/null || true
+  chmod 600 "${PE_CREDENTIAL_FILE}"
   set -a
   # shellcheck disable=SC1090
   source "${PE_CREDENTIAL_FILE}"
   set +a
 fi
 
-export PE_API_URL="${PE_API_URL:-http://127.0.0.1:30000/v1/chat/completions}"
-export PE_MODEL="${PE_MODEL:-Nomas-PE}"
+export PE_PROVIDER="${PE_PROVIDER:-sglang}"
+if [[ "${PE_PROVIDER}" == "sglang" ]]; then
+  export PE_API_URL="${PE_API_URL:-http://127.0.0.1:30000/v1/chat/completions}"
+  export PE_MODEL="${PE_MODEL:-Nomas-PE}"
+fi
 if [[ "${NOMAS_SKIP_FRONTEND_BUILD:-false}" =~ ^(1|true|yes|on)$ ]]; then
   if [[ ! -f apps/frontend/dist/index.html ]]; then
     echo "Prebuilt frontend is missing: apps/frontend/dist/index.html" >&2

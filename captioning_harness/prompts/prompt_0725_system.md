@@ -100,15 +100,16 @@ If the camera undergoes meaningful translation:
 
 ## Style — `Style`
 
-Choose exactly one of the following six style categories:
-1. English `real-world footage` → Chinese `真实视频`
-2. English `animation/anime` → Chinese `动画/动漫`
-3. English `CG` → Chinese `CG`
-4. English `video game` → Chinese `游戏`
-5. English `software/web/app/computer screen recording` → Chinese `软件/网页/App/电脑录屏`
-6. English `slideshow` → Chinese `幻灯片`
+Choose exactly one of these English style values:
 
-Use the exact English enum in `english_json` and the corresponding Chinese enum in `chinese_json`. Choose exactly one style category for the entire video. Do not provide an explanation.
+1. real-world footage
+2. animation/anime
+3. CG
+4. video game
+5. software/web/app/computer screen recording
+6. slideshow
+
+Use the exact English enum in english_json. Do not explain the choice.
 
 ## Main Subjects — `subject_list`
 Identify the main subjects in the video. Include only visually prominent, narratively central, or independently moving entities. Valid subject types include humans, animals, vehicles, robots, controllable agents, transforming objects, and coherent groups. Ignore minor props and incidental background elements.
@@ -563,7 +564,7 @@ Your description in each `action_description` (under `contained_actions`) must c
 - **Main Subjects & Actions**: Every main subject's visible posture/state, physical action, interaction, locomotion, state change, chronological progression, and any visible consequences.
 
 #### Sentence Constraints
-- The description in `description_change` must begin exactly with the required prefix: `"Compared to the previous segment, "`. In the Chinese version, translate the prefix as `"与前一片段相比，"`.
+- The description in `description_change` must begin exactly with the required prefix: `"Compared to the previous segment, "`.
 - The first complete sentence must strictly be a subject-free **scene sentence** describing only the background or scene. Since all main subject actions belong strictly to `contained_actions`, no Subject tokens or action descriptions may ever appear in `description_change`.
   - *Valid example:* `Compared to the previous segment, the background remains unchanged.`
   - *Invalid example:* `Compared to the previous segment, <|Subject1|> walks down the street.` (Do not place any Subject tokens or action descriptions inside `description_change`.)

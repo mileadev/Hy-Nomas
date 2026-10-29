@@ -250,3 +250,8 @@ tea_debug.log
 .claude
 .superpowers
 seg_ar_web_outputs/
+
+# Local provider secrets and generated model artifacts
+.env.local
+.env.*.local
+outputs/

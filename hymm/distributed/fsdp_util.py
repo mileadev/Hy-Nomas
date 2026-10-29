@@ -30,6 +30,7 @@ from hymm.models.checkpointing.load import get_no_split_modules
 from hymm.distributed.activation_offload import get_offload_manager
 
 from functools import partial
+from hymm.utils.config_values import checkpoint_ratio
 
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 
@@ -328,7 +329,7 @@ def apply_fsdp_checkpointing(model, no_split_modules, p=1, skip_attn_recompute=F
               backward recomputation (attention ≈ 40% of per-block compute
               at long seqlen with SP=8).
     """
-    p = eval(p) if isinstance(p, str) else p
+    p = checkpoint_ratio(p)
 
     mgr = get_offload_manager()
     offload_on = mgr is not None and mgr.enabled
@@ -374,8 +375,7 @@ def apply_fsdp_checkpointing(model, no_split_modules, p=1, skip_attn_recompute=F
 
     block_idx = 0
     cut_off = 1 / 2
-    # when passing p as a fraction number (e.g. 1/3), it will be interpreted
-    # as a string in argv, thus we need eval("1/3") here for fractions.
+    # Fraction strings such as 1/3 are parsed without Python evaluation.
 
     def selective_checkpointing(submodule):
         nonlocal block_idx
@@ -399,7 +399,7 @@ def apply_camera_module_checkpointing(model, p=1.0):
     """Apply activation checkpointing to camera ActionModule layers."""
     from hymm.models.camera.action_module import ActionModule
 
-    p = eval(p) if isinstance(p, str) else p
+    p = checkpoint_ratio(p)
     if p <= 0:
         return
 

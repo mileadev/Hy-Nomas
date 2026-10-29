@@ -26,6 +26,7 @@ from urllib.parse import unquote, urlsplit
 
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -93,7 +94,9 @@ class GalleryStorageBusyError(RuntimeError):
 
 _GENERIC_GALLERY_TITLES = {"", "saved world"}
 _GALLERY_TITLE_PREFIX_RE = re.compile(
-    r"^(?:接下来|最后|首先|随后|然后)?(?:约)?\d+(?:\.\d+)?秒[，,:：\s]*"
+    r"^(?:(?:next|then|finally|first|after that)\s+)?(?:about\s+)?"
+    r"\d+(?:\.\d+)?\s+seconds?[,:;\s]*",
+    re.IGNORECASE,
 )
 
 
@@ -103,17 +106,15 @@ def _gallery_title_snippet(value: object, *, limit: int = 48) -> str:
     text = " ".join(str(value or "").split()).strip()
     text = _GALLERY_TITLE_PREFIX_RE.sub("", text)
     for marker in (
-        "。镜头继续",
-        "；镜头继续",
         ". The camera",
-        "。使用第三人称",
+        ". Use third-person",
     ):
         text = text.split(marker, 1)[0].strip()
     if not text:
         return ""
     if len(text) <= limit:
         return text
-    return text[: limit - 1].rstrip("，,。.;；:： ") + "…"
+    return text[: limit - 1].rstrip(",.;: ") + "…"
 
 
 def _gallery_item_title(raw_item: dict[str, Any]) -> str:
@@ -1515,10 +1516,20 @@ def create_gateway_app(
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=cors_origins or ["*"],
+        allow_origins=cors_origins or [],
         allow_credentials=False,
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
+    )
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=[
+            host.strip()
+            for host in os.environ.get(
+                "NOMAS_ALLOWED_HOSTS", "127.0.0.1,localhost,[::1],testserver"
+            ).split(",")
+            if host.strip()
+        ],
     )
 
     @app.get("/health")
@@ -2460,9 +2471,9 @@ def create_gateway_app(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Hy-Nomas lightweight web gateway")
-    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8082)
-    parser.add_argument("--job-db", default="/tmp/nomas_seg_ar_jobs.json")
+    parser.add_argument("--job-db", default=str(PROJECT_ROOT / ".runtime" / "seg_ar_demo" / "jobs.json"))
     parser.add_argument(
         "--output-dir",
         help="Override inference.save_path from the inference config.",

@@ -229,7 +229,7 @@ details code {{ display:block; color:#aebbd2; overflow-wrap:anywhere }} video {{
 <section class="hero">
   <span class="badge">{"PASSED" if passed else "VALIDATION IN PROGRESS / FAILED"}</span>
   <h1>Hy-Nomas Demo Concurrent User Timeline</h1>
-  <p>{clock(started)} 开始，{clock(finished)} 结束；真实模拟不同到达时间、不同 turn 长度和第三用户排队。</p>
+  <p>Started {clock(started)}, finished {clock(finished)}; simulated staggered arrivals, variable turn durations, and a third user queued.</p>
   <div class="metrics">
     <div class="metric"><strong>{seconds(duration)}</strong><span>Wall time</span></div>
     <div class="metric"><strong>{len(report.get("users", {}).get("a", []))}</strong><span>User A turns</span></div>

@@ -349,7 +349,8 @@ class PETranscriptStore:
     ) -> None:
         self.directory = directory.expanduser().resolve()
         self.prompt_profile = prompt_profile
-        self.directory.mkdir(parents=True, exist_ok=True)
+        self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+        os.chmod(self.directory, 0o700)
 
     @staticmethod
     def _safe_session_id(session_id: str) -> str:
@@ -377,6 +378,7 @@ class PETranscriptStore:
         path = self.path_for(session_id)
         lock_path = path.with_suffix(".json.lock")
         with lock_path.open("a+", encoding="utf-8") as lock:
+            os.chmod(lock_path, 0o600)
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
             try:
                 transcript: Dict[str, Any]
@@ -467,6 +469,7 @@ class PETranscriptStore:
         path = self.path_for(session_id)
         lock_path = path.with_suffix(".json.lock")
         with lock_path.open("a+", encoding="utf-8") as lock:
+            os.chmod(lock_path, 0o600)
             fcntl.flock(lock.fileno(), fcntl.LOCK_SH)
             try:
                 if not path.is_file():
@@ -1759,13 +1762,10 @@ class OnlinePromptEnhancer:
         transcript_dir: Optional[Path] = None,
     ) -> None:
         self.output_dir = output_dir.resolve()
-        self.client = client or KimiK3Client(
-            api_url=os.environ.get("PE_API_URL", DEFAULT_API_URL),
-            model=os.environ.get("PE_MODEL", DEFAULT_PROMPT_ENHANCER_MODEL),
-            timeout=int(os.environ.get("PE_API_TIMEOUT", "300")),
-            retries=int(os.environ.get("PE_API_RETRIES", "3")),
-            api_key=os.environ.get("PE_API_KEY"),
-        )
+        if client is None:
+            from apps.pe_providers import create_prompt_enhancer_client
+            client = create_prompt_enhancer_client()
+        self.client = client
         self.fps = fps
         self.max_condition_frames = max_condition_frames
         self.condition_short_side = condition_short_side
@@ -1809,7 +1809,10 @@ class OnlinePromptEnhancer:
     def model_options(self) -> List[Dict[str, Any]]:
         ids = (
             self.client.available_models()
-            if isinstance(self.client, KimiK3Client)
+            if (
+                isinstance(self.client, KimiK3Client)
+                or getattr(self.client, "provider", None) == "bedrock"
+            )
             else [DEFAULT_PROMPT_ENHANCER_MODEL]
         )
         preferred = getattr(self.client, "model", DEFAULT_PROMPT_ENHANCER_MODEL)
@@ -1819,8 +1822,15 @@ class OnlinePromptEnhancer:
                 "id": model,
                 "label": "Kimi-K3" if model == PROMPT_ENHANCER_KIMI_K3 else model,
                 "default": model == default,
-                "reasoning_effort_options": list(PROMPT_ENHANCER_REASONING_EFFORTS),
-                "default_reasoning_effort": DEFAULT_PROMPT_ENHANCER_REASONING_EFFORT,
+                "reasoning_effort_options": list(
+                    getattr(self.client, "supported_reasoning_efforts", PROMPT_ENHANCER_REASONING_EFFORTS)
+                ),
+                "default_reasoning_effort": (
+                    DEFAULT_PROMPT_ENHANCER_REASONING_EFFORT
+                    if DEFAULT_PROMPT_ENHANCER_REASONING_EFFORT
+                    in getattr(self.client, "supported_reasoning_efforts", PROMPT_ENHANCER_REASONING_EFFORTS)
+                    else "none"
+                ),
             }
             for model in ids
         ]
@@ -1863,7 +1873,10 @@ class OnlinePromptEnhancer:
         model = self.resolve_model(enhancer_model)
         return (
             self.client.for_model(model)
-            if isinstance(self.client, KimiK3Client)
+            if (
+                isinstance(self.client, KimiK3Client)
+                or getattr(self.client, "provider", None) == "bedrock"
+            )
             else self.client
         )
 

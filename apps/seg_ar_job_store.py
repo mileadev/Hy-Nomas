@@ -33,7 +33,7 @@ class JobStore:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path).expanduser().resolve()
         self.lock_path = self.path.with_suffix(f"{self.path.suffix}.lock")
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with self._locked_state(write=True):
             pass
 
@@ -90,7 +90,14 @@ class JobStore:
 
     @contextmanager
     def _locked_state(self, *, write: bool) -> Iterator[Dict[str, Any]]:
-        with self.lock_path.open("a+", encoding="utf-8") as lock:
+        # O_NOFOLLOW prevents a writable lock symlink from replacing arbitrary files.
+        fd = os.open(
+            self.lock_path,
+            os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0),
+            0o600,
+        )
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "a+", encoding="utf-8") as lock:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX if write else fcntl.LOCK_SH)
             state = self._read_unlocked()
             try:

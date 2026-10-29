@@ -1,0 +1,131 @@
+name: Hy-Nomas validation
+
+on:
+  push:
+    branches: [main, 'hardening/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install lightweight test dependencies
+        run: python -m pip install 'pytest>=8,<10' 'requests>=2.32,<3' 'Pillow>=11,<13'
+      - name: Parse all Python source
+        run: python -m compileall -q apps hymm captioning_harness scripts reactor tests
+      - name: Verify English-only tracked text
+        run: python scripts/audit/english_check.py
+      - name: Validate providers, preflight and caption schemas
+        run: python -m pytest -q tests/inference/test_pe_providers.py tests/inference/test_local_doctor.py tests/inference/test_caption_english.py tests/inference/test_caption_provider.py tests/inference/test_security_defaults.py tests/inference/test_config_values.py
+      - name: Shell syntax checks
+        run: bash -n scripts/local/run.sh scripts/inference/start_seg_ar_demo.sh scripts/inference/run_seg_ar_gateway.sh
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/frontend/package-lock.json
+      - run: npm --prefix apps/frontend ci --include=dev
+      - run: npm --prefix apps/frontend run build
+      - run: npm --prefix apps/frontend run lint
+      - run: npm --prefix apps/frontend run test
+      - name: Production dependency advisory scan
+        continue-on-error: true
+        run: npm --prefix apps/frontend audit --omit=dev --audit-level=high
+
+      - name: Capture full frontend dependency advisories
+        if: always()
+        run: |
+          npm --prefix apps/frontend audit --json > audit-results/npm-audit.json || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-audit-results
+          path: audit-results/npm-audit.json
+          retention-days: 30
+
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python security audit tools
+        run: python -m pip install bandit==1.9.4 pip-audit==2.10.1
+      - name: Fail on known tracked credential shapes
+        run: python scripts/audit/secret_check.py
+      - name: Scan all Python production paths with Bandit
+        run: |
+          mkdir -p audit-results
+          bandit -r apps hymm captioning_harness scripts reactor \
+            -f json -o audit-results/bandit.json -q \
+            || echo 'Bandit found candidate issues; inspect audit artifact.'
+      - name: Audit explicitly pinned core Python package versions
+        run: |
+          python - <<'PY'
+          import pathlib, re, tomllib
+          data = tomllib.loads(pathlib.Path('pyproject.toml').read_text())
+          selected = []
+          for package in data['project']['dependencies']:
+              if re.fullmatch(r'[A-Za-z0-9_.-]+==[0-9][0-9A-Za-z.+-]*', package):
+                  selected.append(package)
+          pathlib.Path('audit-results/pinned-requirements.txt').write_text(
+              '\n'.join(selected) + '\n'
+          )
+          print(f'Auditing {len(selected)} pinned direct Python dependencies')
+          PY
+          pip-audit --no-deps --disable-pip \
+            -r audit-results/pinned-requirements.txt \
+            --format=json --output=audit-results/pip-audit.json \
+            || echo 'pip-audit detected advisories or lookup failures; inspect artifact.'
+      - name: Summarize advisories without printing secrets
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          folder = Path('audit-results')
+          for filename in ('bandit.json', 'pip-audit.json'):
+              path = folder / filename
+              if not path.is_file():
+                  print(f'{filename}: unavailable; scan must be checked manually')
+                  continue
+              try:
+                  obj = json.loads(path.read_text())
+              except (OSError, ValueError) as exc:
+                  print(f'{filename}: not valid JSON')
+                  continue
+              if filename == 'bandit.json':
+                  records = obj.get('results', [])
+                  levels = {}
+                  for issue in records:
+                      level = issue.get('issue_severity', 'UNKNOWN')
+                      levels[level] = levels.get(level, 0) + 1
+                  print(f'Bandit results: {len(records)} candidates; severity={levels}')
+              else:
+                  records = obj.get('dependencies', [])
+                  findings = sum(len(r.get('vulns', [])) for r in records)
+                  print(f'Python pinned dependencies: {len(records)}; advisories={findings}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-results
+          path: audit-results
+          retention-days: 30

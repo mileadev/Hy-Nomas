@@ -2,13 +2,14 @@
 # --single-gpu-low-mem-mode selects configs/experiment/single_gpu_low_mem_inference.yaml.
 # The shared parser forwards the selected preset to the gateway and GPU workers.
 set -euo pipefail
+umask 077
 
 cd "$(dirname "$0")/../.."
 
 source scripts/inference/seg_ar_demo_config.sh
 
 RUNTIME_DIR="${RUNTIME_DIR:-${PWD}/.runtime/seg_ar_demo}"
-JOB_DB="${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}"
+JOB_DB="${JOB_DB:-${RUNTIME_DIR}/jobs.json}"
 WORKER_REPLICAS="${WORKER_REPLICAS:-1}"
 mkdir -p "${RUNTIME_DIR}"
 
@@ -151,8 +152,12 @@ if [[ -n "${NOMAS_HTTP_PROXY_PORT:-}" ]]; then
   fi
   credential_file="${NOMAS_HTTP_PROXY_CREDENTIAL_FILE:-${RUNTIME_DIR}/http_server_8081.env}"
   if [[ -z "${NOMAS_DEMO_PASSWORD:-}" ]]; then
+    if [[ -L "${credential_file}" ]]; then
+      echo "Refusing symlink proxy credential file" >&2
+      exit 2
+    fi
     if [[ -f "${credential_file}" ]]; then
-      chmod 600 "${credential_file}" 2>/dev/null || true
+      chmod 600 "${credential_file}"
       set -a
       # This file is generated below with mode 0600 and shell-escaped values.
       # shellcheck disable=SC1090

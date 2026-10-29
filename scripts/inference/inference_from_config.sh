@@ -11,26 +11,12 @@ set -e
 # ================= Environment Setup =================
 export PYTHONPATH="$(pwd):${PYTHONPATH:-}"
 
-export NCCL_IB_GID_INDEX=3
-export NCCL_IB_SL=3
-export NCCL_CHECK_DISABLE=1
-export NCCL_P2P_DISABLE=${NCCL_P2P_DISABLE:-0}
-export NCCL_IB_DISABLE=${NCCL_IB_DISABLE:-0}
-export NCCL_LL_THRESHOLD=16384
-export NCCL_IB_CUDA_SUPPORT=1
-export NCCL_SOCKET_IFNAME=${NCCL_SOCKET_IFNAME:-bond1}
-export UCX_NET_DEVICES=${UCX_NET_DEVICES:-bond1}
-export NCCL_IB_HCA=mlx5_bond_1,mlx5_bond_5,mlx5_bond_3,mlx5_bond_7,mlx5_bond_4,mlx5_bond_8,mlx5_bond_2,mlx5_bond_6
-export NCCL_NET_GDR_LEVEL=2
-export NCCL_IB_QPS_PER_CONNECTION=4
-export NCCL_IB_TC=160
-export NCCL_PXN_DISABLE=1
-export NVSHMEM_BOOTSTRAP_UID_SOCK_IFNAME=${NVSHMEM_BOOTSTRAP_UID_SOCK_IFNAME:-bond1}
-export NCCL_DEBUG=WARN
-export NCCL_DEBUG_SUBSYS=INIT,NET
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-export TORCH_INDUCTOR_FX_GRAPH_CACHE=1
-export LD_LIBRARY_PATH=/usr/local/lib/python3.12/site-packages/cusparselt/lib:${LD_LIBRARY_PATH:-}
+# Detect NCCL/UCX networking automatically. HPC operators may supply their own
+# NCCL_SOCKET_IFNAME, UCX_NET_DEVICES, NCCL_IB_HCA and related settings.
+# Do not force an unavailable bond1 or disable NCCL checks on local machines.
+export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+export TORCH_INDUCTOR_FX_GRAPH_CACHE="${TORCH_INDUCTOR_FX_GRAPH_CACHE:-1}"
 
 # ================= Parse positional args =================
 if [ $# -lt 1 ]; then

@@ -99,11 +99,11 @@ def compute_trajectory_metrics(original_c2ws, reconstructed_c2ws, align_scale=Tr
 
     metrics = {
         # Translation
-        "ate_rmse": ate_rmse,  # Absolute Trajectory Error (位置误差)
-        "rpe_trans_rmse": rpe_trans_rmse,  # Relative Pose Error - Translation (相对平移误差)
+        "ate_rmse": ate_rmse,  # Absolute Trajectory Error (position error)
+        "rpe_trans_rmse": rpe_trans_rmse,  # Relative Pose Error - Translation (relative translation error)
         # Rotation (degrees)
-        "rot_error_mean": rot_error_mean,  # Mean rotation error (平均旋转误差)
-        "rpe_rot_rmse": rpe_rot_rmse,  # Relative Pose Error - Rotation (相对旋转误差)
+        "rot_error_mean": rot_error_mean,  # Mean rotation error (mean rotation error)
+        "rpe_rot_rmse": rpe_rot_rmse,  # Relative Pose Error - Rotation (relative rotation error)
     }
 
     return metrics

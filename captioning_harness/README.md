@@ -4,7 +4,7 @@ Prepare SFT data from local videos in three stages: **VAE Encoding → Event Seg
 
 ![Local videos, VAE encoding, event segmentation, Kimi-K3 captioning, and the final SFT dataset.](../assets/sft-data-preparation.svg)
 
-Run commands from the repository root. Download the model repository as described in [Model Assets](../README.md#model-assets) and set `Hy_Nomas_Model_Path` to that directory. The commands below reuse its value. Keep the original local videos available for segmentation and captioning.
+Run commands from the repository root. Download the model repository as described in [Model Assets](../README.md#install) and set `Hy_Nomas_Model_Path` to that directory. The commands below reuse its value. Keep the original local videos available for segmentation and captioning.
 
 > The diagram describes the preparation workflow. The current scripts expose separate interfaces: the VAE encoder expects existing prompts and boundaries, and the captioning command uses fixed-duration segments rather than the event-segmentation output. They do not yet implement the complete sequence above automatically.
 
@@ -69,7 +69,7 @@ Segmentation samples at 2 FPS by default for visual analysis; this does not chan
 
 ## 3. Captioning with Kimi-K3
 
-Kimi-K3 describes each segment in successive visual chat turns, then produces a bilingual summary. English per-segment prompts contain scene context, subjects, visual descriptions, and actions.
+A compatible multimodal LLM describes each segment in successive visual chat turns, then produces a validated English-only summary. English per-segment prompts contain scene context, subjects, visual descriptions, and actions.
 
 ### Start Kimi-K3
 
@@ -115,7 +115,7 @@ Keep `dataset.fps` equal to the annotation frame rate. The commands above use 24
 
 For camera-conditioned samples, pass `--camera-dir /path/to/cameras` to `pack`. Each `<sample_id>.npz` must contain normalized FP32 `camera_extrinsics` (`[F,4,4]`) and `camera_intrinsics` (`[F,3,3]`) matching the sampled frames and image preprocessing. Without camera data, samples use `has_camera=false`.
 
-After preparing the training file, create the packing plan below, then follow [Training and Merging](../README.md#training-and-merging).
+After preparing the training file, create the packing plan below, then follow [Training and Merging](../apps/README.md).
 
 ## Offline Sequence Packing
 
@@ -177,3 +177,20 @@ Pass exactly one Arrow IPC file (`.arrow`) or one Parquet file (`.parquet`) as `
 `segment_boundaries` must be strictly increasing and have one more entry than `prompts`. The latent must use the 32-channel DCAE-V (`dcae-v-f32t4c32`) associated with the model weights. The file contains the latent payload itself; video paths, latent paths, directories, manifests, and network URLs cannot substitute for these embedded payloads. When token packing is enabled, supply the separate packing plan through `dataset.token_packing_sorted_groups_path`; see [Offline Sequence Packing](#offline-sequence-packing).
 
 Camera tensors must use the normalization associated with the released camera-control checkpoint. The public training config uses `extrinsics_attn`; text-only rows set `has_camera=false` and null camera payloads. No external trajectory or pose file is read at training time.
+
+## Alternative prompt providers
+
+The annotate and segment commands accept CAPTION_PROVIDER (sglang,
+ollama-local, ollama-cloud or bedrock). Use CAPTION_MODEL to select an
+available vision-capable model. For local Ollama, set PE_API_URL (or
+CAPTION_API_BASE) to http://127.0.0.1:11434/v1; for direct Ollama Cloud,
+set OLLAMA_API_KEY and select a cloud vision model. Cloud uses the fixed
+https://ollama.com/v1 endpoint. For Bedrock, install the pe-bedrock extra
+and set AWS_REGION and an enabled Converse vision model ID. Bedrock ignores
+generic thinking levels and can process at most 20 sampled frames; use a
+smaller --max-frames-per-segment when necessary.
+
+Model context and output limits differ across providers. The final caption
+may request up to 16,384 output tokens; confirm that the selected provider
+supports this limit or reduce --final-max-tokens. All outputs are checked
+against the English-only caption schema.

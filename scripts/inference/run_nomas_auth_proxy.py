@@ -12,7 +12,7 @@ from aiohttp import ClientSession, ClientTimeout, web
 
 
 BACKEND = os.environ.get("NOMAS_PROXY_BACKEND", "http://127.0.0.1:18084")
-HOST = os.environ.get("NOMAS_PROXY_HOST", "0.0.0.0")
+HOST = os.environ.get("NOMAS_PROXY_HOST", "127.0.0.1")
 PORT = int(os.environ.get("NOMAS_PROXY_PORT", "18085"))
 USERNAME = os.environ.get("NOMAS_DEMO_USERNAME", "demo")
 EXPECTED = os.environ.get("NOMAS_DEMO_CREDENTIAL_SHA256", "").strip()
@@ -110,10 +110,10 @@ async def proxy(request: web.Request) -> web.StreamResponse:
 
 async def session_context(app: web.Application):
     timeout = ClientTimeout(
-        total=None,
+        total=int(os.environ.get("NOMAS_PROXY_TIMEOUT_SECONDS", "900")),
         connect=10,
         sock_connect=10,
-        sock_read=None,
+        sock_read=900,
     )
     async with ClientSession(
         timeout=timeout,
@@ -129,7 +129,8 @@ def main() -> None:
             "NOMAS_DEMO_CREDENTIAL_SHA256 is required; hash the literal "
             "'username:password' with SHA-256"
         )
-    app = web.Application(client_max_size=20 * 1024**3)
+    max_body_mib = max(1, min(8192, int(os.environ.get("NOMAS_PROXY_MAX_BODY_MIB", "512"))))
+    app = web.Application(client_max_size=max_body_mib * 1024**2)
     app.cleanup_ctx.append(session_context)
     app.router.add_route("*", "/{tail:.*}", proxy)
     web.run_app(

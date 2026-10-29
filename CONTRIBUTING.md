@@ -1,6 +1,6 @@
 # Contributing to Hy-Nomas
 
-Contributions to code, documentation, tests, and reproducible bug reports are welcome. Issues and pull requests may be written in English or Chinese.
+Contributions to code, documentation, tests, and reproducible bug reports are welcome. Issues and pull requests should be written in English.
 
 For suspected vulnerabilities, follow [SECURITY.md](SECURITY.md) and report privately. Use public issues for non-security bugs, questions, and feature proposals.
 
@@ -10,11 +10,11 @@ Search existing issues and pull requests for related work. For a substantial arc
 
 Keep each pull request focused on one problem. Small fixes and documentation improvements can be submitted directly. Communicate respectfully and discuss the code and evidence rather than the contributor.
 
-The project license is currently pending; see [License](README.md#license). This guide does not establish a license or change the terms of any dependency, model, or dataset. Preserve third-party notices and identify the source and applicable terms of any material you propose to add. Discuss contributions involving third-party code or assets with maintainers when the terms are unclear.
+See [License](LICENSE) for repository terms. This guide does not establish a license or change the terms of any dependency, model, or dataset. Preserve third-party notices and identify the source and applicable terms of any material you propose to add. Discuss contributions involving third-party code or assets with maintainers when the terms are unclear.
 
 ## Set up a development environment
 
-Follow [Environment Setup](README.md#environment-setup) or [环境配置](README_CN.md#环境配置), then activate the Python environment and run commands from the repository root. The complete environment includes CUDA attention dependencies; some tests still import these packages even when they execute on CPU.
+Follow [Environment Setup](README.md#install), then activate the Python environment and run commands from the repository root. The complete environment includes CUDA attention dependencies; some tests still import these packages even when they execute on CPU.
 
 The Python test tools are not currently declared in a dedicated development extra. Install them into the activated environment if needed:
 
@@ -96,4 +96,4 @@ Target the repository's default branch unless maintainers identify another targe
 
 Keep commits focused and use descriptive messages. Draft pull requests are useful for early feedback or work awaiting hardware validation. Address review comments with code, tests, or a clear explanation; do not present unverified behavior as tested.
 
-For general contribution questions, use an issue or contact the team through [Contact Us](README.md#contact-us). Keep vulnerability details in the private channel described in [SECURITY.md](SECURITY.md).
+For general contribution questions, use an issue or contact the team through [Contact Us](README.md#license-and-attribution). Keep vulnerability details in the private channel described in [SECURITY.md](SECURITY.md).

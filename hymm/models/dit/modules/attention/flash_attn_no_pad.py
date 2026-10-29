@@ -63,7 +63,7 @@ def flash_attn_no_pad_v3(
     query_unpad, indices, cu_seqlens_q, max_seqlen_q, _ = unpad_input(
         rearrange(query, "b s h d -> b s (h d)"), key_padding_mask
     )
-    key_unpad, _, cu_seqlens_k, _, _ = unpad_input(  # 复用max_seqlen_q
+    key_unpad, _, cu_seqlens_k, _, _ = unpad_input(  # Reuse max_seqlen_q.
         rearrange(key, "b s h d -> b s (h d)"), key_padding_mask
     )
     value_unpad, _, _, _, _ = unpad_input(
@@ -174,7 +174,7 @@ def test_flash_attn_alignment(
     seq_len: int = 128,
     n_heads: int = 8,
     head_dim: int = 64,
-    pct_valid: float = 0.8,  # 有效token比例
+    pct_valid: float = 0.8,  # Fraction of valid tokens.
     causal: bool = True,
     tol: float = 1e-5,
 ) -> dict:
@@ -188,7 +188,7 @@ def test_flash_attn_alignment(
     key_padding_mask = torch.ones(batch_size, seq_len, device=device)
     for i in range(batch_size):
         valid_len = int(seq_len * pct_valid)
-        key_padding_mask[i, valid_len:] = 0  # 设置padding部分为0
+        key_padding_mask[i, valid_len:] = 0  # Set padded positions to zero.
 
     output_v2 = flash_attn_no_pad(
         qkv, key_padding_mask, causal=causal, deterministic=True
@@ -220,13 +220,13 @@ def test_flash_attn_alignment(
 
 if __name__ == "__main__":
     base_test = test_flash_attn_alignment(pct_valid=0.7)
-    print("基础测试结果:", base_test)
+    print("Baseline test results:", base_test)
 
     full_valid_test = test_flash_attn_alignment(pct_valid=1.0)
-    print("\n全有效token测试:", full_valid_test)
+    print("\nAll-valid-token test:", full_valid_test)
 
     high_pad_test = test_flash_attn_alignment(pct_valid=0.3)
-    print("\n高padding比例测试:", high_pad_test)
+    print("\nHigh-padding-ratio test:", high_pad_test)
 
     non_causal_test = test_flash_attn_alignment(causal=False)
-    print("\n非因果注意力测试:", non_causal_test)
+    print("\nNon-causal attention test:", non_causal_test)

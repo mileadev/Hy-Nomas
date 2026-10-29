@@ -28,7 +28,7 @@ def validate_swa_streaming_rollback(caches):
     # Actual recent SWA caches have swa_capacity but may omit swa_sampling.
     if any("swa_capacity" in cache and cache.get("swa_sampling", "recent") == "recent"
            for cache in caches or ()):
-        raise UnsupportedStreamingRollbackError("recent模式SWA不支持streaming回退")
+        raise UnsupportedStreamingRollbackError("Recent-mode SWA does not support streaming rollback")
 
 
 def _validate_frame_budget(total_frames, past_frames):

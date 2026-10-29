@@ -506,7 +506,7 @@ def load_lora_training_checkpoint(
     payload = torch.load(
         directory / SHARD_TEMPLATE.format(shard_rank=shard_rank),
         map_location="cpu",
-        weights_only=False,
+        weights_only=True,
     )
     if int(payload.get("format_version", -1)) != 1:
         raise ValueError("Unsupported LoRA checkpoint shard format")
@@ -542,6 +542,14 @@ def load_lora_training_checkpoint(
 
     metadata = None
     if _rank() == 0:
+        if os.getenv("NOMAS_TRUST_PICKLE_CHECKPOINTS", "").strip().lower() not in {
+            "1", "true", "yes", "on",
+        }:
+            raise RuntimeError(
+                "LoRA training metadata contains NumPy/Python RNG state and uses "
+                "unsafe PyTorch pickle. For trusted checkpoints only, set "
+                "NOMAS_TRUST_PICKLE_CHECKPOINTS=1 to restore."
+            )
         metadata = torch.load(
             directory / METADATA_FILE, map_location="cpu", weights_only=False
         )

@@ -183,7 +183,7 @@ class CycleStates(BaseStates):
         self.running_samples_by_data_type[data_type] += samples
 
     def get_avg_loss_by_data_type(self):
-        """获取各data_type的平均loss"""
+        """Return average loss grouped by data_type."""
         avg_losses = {}
         for data_type in self.running_loss_by_data_type.keys():
             count = self.running_loss_count_by_data_type[data_type]

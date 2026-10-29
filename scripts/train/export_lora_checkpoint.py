@@ -29,7 +29,7 @@ def export_adapter(checkpoint_dir: Path, output_dir: Path):
         torch.load(
             checkpoint_dir / SHARD_TEMPLATE.format(shard_rank=index),
             map_location="cpu",
-            weights_only=False,
+            weights_only=True,
         )
         for index in range(shard_count)
     ]

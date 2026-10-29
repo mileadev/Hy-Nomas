@@ -1,8 +1,15 @@
 """Reject executable checkpoint ratios while preserving fraction syntax."""
 
 import pytest
+import importlib.util
+from pathlib import Path
 
-from hymm.utils.config_values import checkpoint_ratio
+MODULE = Path(__file__).resolve().parents[2] / "hymm" / "utils" / "config_values.py"
+SPEC = importlib.util.spec_from_file_location("checkpoint_config_values", MODULE)
+assert SPEC is not None and SPEC.loader is not None
+cfg = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(cfg)
+checkpoint_ratio = cfg.checkpoint_ratio
 
 
 @pytest.mark.parametrize("input,expected", [

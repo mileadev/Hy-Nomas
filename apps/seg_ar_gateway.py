@@ -2473,7 +2473,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Hy-Nomas lightweight web gateway")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8082)
-    parser.add_argument("--job-db", default="/tmp/nomas_seg_ar_jobs.json")
+    parser.add_argument("--job-db", default=str(PROJECT_ROOT / ".runtime" / "seg_ar_demo" / "jobs.json"))
     parser.add_argument(
         "--output-dir",
         help="Override inference.save_path from the inference config.",

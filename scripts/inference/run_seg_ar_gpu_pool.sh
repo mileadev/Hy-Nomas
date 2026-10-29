@@ -114,7 +114,7 @@ start_replica() {
   mkdir -p "${slot_runtime}"
   setsid env \
     RUNTIME_DIR="${slot_runtime}" \
-    JOB_DB="${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}" \
+    JOB_DB="${JOB_DB:-${RUNTIME_DIR}/jobs.json}" \
     WORKER_SLOT="${slot}" \
     SP_SIZE="${SP_SIZE}" \
     CUDA_VISIBLE_DEVICES="${gpu_list}" \
@@ -137,7 +137,7 @@ done
 # and safely requeue standalone jobs.
 while true; do
   timed_out_slots="$(
-    python - "${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}" \
+    python - "${JOB_DB:-${RUNTIME_DIR}/jobs.json}" \
       "${GENERATION_TIMEOUT_SECONDS}" <<'PY' || true
 import sys
 from apps.seg_ar_job_store import JobStore
@@ -186,7 +186,7 @@ PY
       rc=$?
       set -e
       restart_counts[$index]=$((restart_counts[$index] + 1))
-      python - "${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}" "${index}" "${rc}" <<'PY' || true
+      python - "${JOB_DB:-${RUNTIME_DIR}/jobs.json}" "${index}" "${rc}" <<'PY' || true
 import socket
 import sys
 from apps.seg_ar_job_store import JobStore

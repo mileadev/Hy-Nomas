@@ -6,7 +6,7 @@ cd "$(dirname "$0")/../.."
 
 source scripts/inference/seg_ar_demo_config.sh
 
-JOB_DB="${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}"
+JOB_DB="${JOB_DB:-${RUNTIME_DIR}/jobs.json}"
 RUNTIME_DIR="${RUNTIME_DIR:-${PWD}/.runtime/seg_ar_demo}"
 PORT="${PORT:-8081}"
 HOST="${NOMAS_GATEWAY_HOST:-127.0.0.1}"

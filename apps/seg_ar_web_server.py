@@ -2534,7 +2534,7 @@ def parse_server_args() -> Tuple[argparse.Namespace, List[str]]:
     )
     parser.add_argument(
         "--job-db",
-        default="/tmp/nomas_seg_ar_jobs.json",
+        default=str(PROJECT_ROOT / ".runtime" / "seg_ar_demo" / "jobs.json"),
         help="SQLite queue shared with apps/seg_ar_gateway.py.",
     )
     parser.add_argument("--worker-poll-interval", type=float, default=0.5)

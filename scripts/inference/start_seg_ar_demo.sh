@@ -9,7 +9,7 @@ cd "$(dirname "$0")/../.."
 source scripts/inference/seg_ar_demo_config.sh
 
 RUNTIME_DIR="${RUNTIME_DIR:-${PWD}/.runtime/seg_ar_demo}"
-JOB_DB="${JOB_DB:-/tmp/nomas_seg_ar_jobs.json}"
+JOB_DB="${JOB_DB:-${RUNTIME_DIR}/jobs.json}"
 WORKER_REPLICAS="${WORKER_REPLICAS:-1}"
 mkdir -p "${RUNTIME_DIR}"
 

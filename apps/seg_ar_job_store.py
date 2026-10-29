@@ -33,7 +33,7 @@ class JobStore:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path).expanduser().resolve()
         self.lock_path = self.path.with_suffix(f"{self.path.suffix}.lock")
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with self._locked_state(write=True):
             pass
 

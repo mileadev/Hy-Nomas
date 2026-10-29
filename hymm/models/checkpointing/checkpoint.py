@@ -9,6 +9,7 @@ save_checkpoint only after all files are durable from the process's view.
 from __future__ import annotations
 
 import json
+import os
 import pickle
 import random
 import re
@@ -28,6 +29,18 @@ from torch.distributed.checkpoint.state_dict import (
 MODEL_FILE = "diffusion_pytorch_model.safetensors"
 SCALAR_FILE = "scalar_states.pkl"
 OPTIMIZER_FILE = "optimizer.pt"
+
+
+def _require_explicit_pickle_trust() -> None:
+    """Pickle and unrestricted torch.load can execute code during deserialization."""
+    if os.getenv("NOMAS_TRUST_PICKLE_CHECKPOINTS", "").lower() not in {
+        "1", "true", "yes", "on",
+    }:
+        raise RuntimeError(
+            "Checkpoint scalar/RNG restore uses unsafe pickle. Inspect the checkpoint "
+            "source, then explicitly set NOMAS_TRUST_PICKLE_CHECKPOINTS=1 to restore."
+        )
+
 COMPLETE_FILE = "checkpoint.json"
 
 
@@ -297,9 +310,10 @@ def load_checkpoint(
         raise ValueError(
             f"Checkpoint world size {metadata['world_size']} differs from current {_world_size()}"
         )
+    _require_explicit_pickle_trust()
     _load_model_weights(model, weight_path)
     with scalar_path.open("rb") as stream:
-        scalar_states_list = pickle.load(stream)
+        scalar_states_list = pickle.load(stream)  # Explicitly trusted only.
 
     optimizer_loaded = False
     optimizer_path = directory / OPTIMIZER_FILE
@@ -310,7 +324,7 @@ def load_checkpoint(
                 "set training.optimizer.save_optimizer_state=false for a weights-only resume"
             )
         optimizer_state = torch.load(
-            optimizer_path, map_location="cpu", weights_only=False
+            optimizer_path, map_location="cpu", weights_only=True
         )
         set_optimizer_state_dict(
             model,
@@ -331,6 +345,8 @@ def load_rng_states(ckpt_dir: str, rank: int, logger=None) -> bool:
         if logger is not None:
             logger.warning(f"RNG state file not found: {path}")
         return False
+    _require_explicit_pickle_trust()
+    # Legacy NumPy/Python RNG state cannot be loaded with weights_only=True.
     state = torch.load(path, map_location="cpu", weights_only=False)
     torch.random.set_rng_state(state["torch_cpu"])
     if state.get("torch_cuda") is not None and torch.cuda.is_available():

@@ -151,8 +151,12 @@ if [[ -n "${NOMAS_HTTP_PROXY_PORT:-}" ]]; then
   fi
   credential_file="${NOMAS_HTTP_PROXY_CREDENTIAL_FILE:-${RUNTIME_DIR}/http_server_8081.env}"
   if [[ -z "${NOMAS_DEMO_PASSWORD:-}" ]]; then
+    if [[ -L "${credential_file}" ]]; then
+      echo "Refusing symlink proxy credential file" >&2
+      exit 2
+    fi
     if [[ -f "${credential_file}" ]]; then
-      chmod 600 "${credential_file}" 2>/dev/null || true
+      chmod 600 "${credential_file}"
       set -a
       # This file is generated below with mode 0600 and shell-escaped values.
       # shellcheck disable=SC1090

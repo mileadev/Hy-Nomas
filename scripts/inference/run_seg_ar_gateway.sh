@@ -14,8 +14,12 @@ HOST="${NOMAS_GATEWAY_HOST:-127.0.0.1}"
 # Keep API credentials outside the repository while allowing Gateway-only
 # restarts to retain online prompt enhancement.
 PE_CREDENTIAL_FILE="${PE_CREDENTIAL_FILE:-${RUNTIME_DIR}/pe_gateway.env}"
+if [[ -L "${PE_CREDENTIAL_FILE}" ]]; then
+  echo "Refusing symlink PE_CREDENTIAL_FILE" >&2
+  exit 2
+fi
 if [[ -f "${PE_CREDENTIAL_FILE}" ]]; then
-  chmod 600 "${PE_CREDENTIAL_FILE}" 2>/dev/null || true
+  chmod 600 "${PE_CREDENTIAL_FILE}"
   set -a
   # shellcheck disable=SC1090
   source "${PE_CREDENTIAL_FILE}"

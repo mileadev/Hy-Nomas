@@ -43,40 +43,62 @@ Transformers loads `Qwen/Qwen2.5-VL-7B-Instruct` by default, downloading files a
 
 ## 2. Start the demo
 
-### 2.1. Deploy and connect online prompt enhancement (required)
+### 2.1. Select a prompt enhancement provider (required)
 
-Online prompt enhancement (PE) is required for the demo. Start the Nomas-PE service before the gateway and GPU workers. The gateway must be able to reach it throughout the session.
+Prompt enhancement interprets text and sampled video frames; the Hy-Nomas
+DiT / PixelUMM GPU workers still perform video generation. Select exactly
+one backend and keep credentials on the gateway, not in the browser.
 
-On the Nomas-PE server, use an official SGLang Docker image that supports Qwen3.8 inference. Run the following commands inside the container. The provided launcher uses one node with eight GPUs by default:
+**Local Ollama** (use a vision model for video continuations):
 
-```bash
-export Hy_Nomas_Model_Path="${Hy_Nomas_Model_Path:-/path/to/Hy-Nomas}"
+~~~bash
+ollama pull qwen2.5vl:7b
+export PE_PROVIDER=ollama-local
+export PE_API_URL=http://127.0.0.1:11434/v1
+export PE_MODEL=qwen2.5vl:7b
+~~~
 
-export PE_MODEL_PATH="${Hy_Nomas_Model_Path}/PE"
+**Direct Ollama Cloud** (billable cloud data processing):
+
+~~~bash
+export PE_PROVIDER=ollama-cloud
+export PE_MODEL=gemma4:31b
+export OLLAMA_API_KEY=your-api-key
+~~~
+
+Cloud uses the fixed TLS base URL https://ollama.com/v1. Do not expose keys.
+
+**AWS Bedrock Converse** (requires enabled vision-capable model):
+
+~~~bash
+python -m pip install -e '.[pe-bedrock]'
+export PE_PROVIDER=bedrock
+export PE_MODEL=your-enabled-vision-model-id
+export AWS_REGION=eu-west-1
+export AWS_PROFILE=your-least-privilege-profile
+~~~
+
+Grant only bedrock:InvokeModel for the approved model resources; boto3 uses
+the default AWS credential chain. Bedrock receives at most 20 sampled images.
+The adapter accepts generic reasoning effort "none" only.
+
+**Original SGLang Nomas-PE** (separate GPU resources):
+
+~~~bash
+export PE_PROVIDER=sglang
+export PE_MODEL_PATH="$Hy_Nomas_Model_Path/PE"
 export PE_MODEL=Nomas-PE
 bash apps/serve_nomas_pe.sh
-```
+export PE_API_URL=http://127.0.0.1:30000/v1
+~~~
 
-Nomas-PE uses its own GPU resources; account for these separately from the video-generation workers. Set `PE_TP_SIZE` and `PE_PORT` if your deployment requires different values. If using an existing service, confirm it is running and exposes `Nomas-PE`.
+SGLang requires its own GPU deployment (default eight GPUs). When the PE
+server is remote, configure authentication and private transport or TLS.
 
-On the demo host, export the connection settings in the shell used to start the demo:
-
-```bash
-export PE_API_URL=http://<your-pe-server>:30000/v1/chat/completions
-export PE_MODEL=Nomas-PE
-# If the PE server requires authentication:
-# export PE_API_KEY=<your-api-key>
-```
-
-The service must expose the model ID `Nomas-PE`, matching `PE_MODEL`. Check model discovery from the demo host:
-
-```bash
-curl --fail --silent --show-error \
-  -H "Authorization: Bearer ${PE_API_KEY:-EMPTY}" \
-  "${PE_API_URL%/chat/completions}/models"
-```
-
-Confirm that the response lists `Nomas-PE` before continuing. For the provided server launcher, enable authentication with `PE_API_KEY` and set the matching `PE_API_KEY` on the demo host.
+The frontend discovers available Ollama/SGLang model IDs via /v1/models
+or exposes the configured Bedrock ID. Model-generated JSON is validated.
+An incompatible model will fail; no automatic fallback to another
+provider occurs. See [local deployment](../docs/LOCAL_DEPLOYMENT.md).
 
 ### 2.2. Configure runtime paths
 
@@ -137,7 +159,7 @@ bash scripts/inference/start_seg_ar_demo.sh \
   model.vae.checkpoint="${Hy_Nomas_Model_Path}/VAE/PixelUMM_FT_FP8/diffusion_pytorch_model_fp8.safetensors"
 ```
 
-PE remains required. This selects `configs/experiment/single_gpu_low_mem_inference.yaml` for the gateway and workers, taking precedence over `EXPERIMENT` and explicit `experiment=...` selection. Other launch overrides still apply.
+Prompt enhancement remains required. This selects `configs/experiment/single_gpu_low_mem_inference.yaml` for the gateway and workers, taking precedence over `EXPERIMENT` and explicit `experiment=...` selection. Other launch overrides still apply.
 
 Inspect the selected configuration and topology without starting services:
 

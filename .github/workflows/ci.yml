@@ -26,7 +26,7 @@ jobs:
       - name: Verify English-only tracked text
         run: python scripts/audit/english_check.py
       - name: Validate providers, preflight and caption schemas
-        run: python -m pytest -q tests/inference/test_pe_providers.py tests/inference/test_local_doctor.py tests/inference/test_caption_english.py
+        run: python -m pytest -q tests/inference/test_pe_providers.py tests/inference/test_local_doctor.py tests/inference/test_caption_english.py tests/inference/test_caption_provider.py
       - name: Shell syntax checks
         run: bash -n scripts/local/run.sh scripts/inference/start_seg_ar_demo.sh scripts/inference/run_seg_ar_gateway.sh
   frontend:

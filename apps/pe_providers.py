@@ -97,12 +97,13 @@ class BedrockConverseClient:
     def request_payload(
         self, messages: list[dict[str, Any]], *,
         reasoning_effort: str | None = None, seed: int | None = None,
+        max_tokens: int = 4096,
     ) -> dict[str, Any]:
         # This JSON-safe logical snapshot is for the existing PE transcript.
         # Binary image payloads are converted only immediately before Converse.
         return {
             "provider": "bedrock", "modelId": self.model, "messages": messages,
-            "maxTokens": 4096, "seed_supported": False,
+            "maxTokens": max_tokens, "seed_supported": False,
         }
 
     @staticmethod
@@ -154,7 +155,9 @@ class BedrockConverseClient:
             raise PromptEnhancementError("Bedrock message has no content")
         return converted
 
-    def _converse_payload(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
+    def _converse_payload(self, messages: list[dict[str, Any]], max_tokens: int = 4096) -> dict[str, Any]:
+        if not 1 <= max_tokens <= 65536:
+            raise ValueError("max_tokens must be between 1 and 65536")
         positions = [
             (i, j)
             for i, message in enumerate(messages)
@@ -190,7 +193,7 @@ class BedrockConverseClient:
         payload: dict[str, Any] = {
             "modelId": self.model,
             "messages": turns,
-            "inferenceConfig": {"maxTokens": 4096},
+            "inferenceConfig": {"maxTokens": max_tokens},
         }
         if system:
             payload["system"] = system
@@ -200,6 +203,7 @@ class BedrockConverseClient:
         self, messages: list[dict[str, Any]], *,
         stream_callback: Callable[[str, str], None] | None = None,
         reasoning_effort: str | None = None, seed: int | None = None,
+        max_tokens: int = 4096,
     ) -> tuple[str, str | None]:
         if normalize_prompt_enhancer_reasoning_effort(reasoning_effort or "none") != "none":
             raise PromptEnhancementError(
@@ -207,7 +211,11 @@ class BedrockConverseClient:
             )
         # Bedrock Converse has no model-independent seed parameter. The requested
         # seed remains in the audit record but is not represented as deterministic.
-        response = self._client.converse(**self._converse_payload(messages))
+        response = self._client.converse(
+            **self._converse_payload(messages, max_tokens=max_tokens)
+        )
+        if response.get("stopReason") in {"guardrail_intervened", "content_filtered"}:
+            raise PromptEnhancementError("Bedrock blocked output via content filtering")
         blocks = response.get("output", {}).get("message", {}).get("content", [])
         text = "".join(
             block.get("text", "") for block in blocks

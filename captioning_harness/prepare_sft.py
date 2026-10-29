@@ -368,6 +368,20 @@ def validate_final(parsed: dict[str, Any], segments: list[dict[str, Any]]):
             prior_end = end
 
 
+def caption_provider() -> str:
+    """Select a multimodal annotation backend without changing output schemas."""
+    return os.getenv("CAPTION_PROVIDER", os.getenv("PE_PROVIDER", "sglang")).lower()
+
+
+def default_caption_api_base() -> str:
+    provider = caption_provider()
+    if provider == "ollama-cloud":
+        return "https://ollama.com/v1"
+    if provider in {"ollama", "ollama-local"}:
+        return os.getenv("PE_API_URL", "http://127.0.0.1:11434/v1")
+    return os.getenv("PE_API_URL", "http://127.0.0.1:30000/v1")
+
+
 def chat(
     api_base: str,
     api_key: str,
@@ -381,29 +395,55 @@ def chat(
 ):
     import requests
 
+    provider = caption_provider()
+    if provider not in {"sglang", "ollama", "ollama-local", "ollama-cloud", "bedrock"}:
+        raise ValueError("CAPTION_PROVIDER must be sglang, ollama-local, ollama-cloud or bedrock")
+    if provider == "bedrock":
+        from apps.pe_providers import BedrockConverseClient
+        client = BedrockConverseClient(
+            model=model,
+            region=os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION"),
+            timeout=timeout,
+            retries=0,
+        )
+    else:
+        client = None
     body = {
         "model": model,
         "messages": list(messages),
         "max_tokens": max_tokens,
         "temperature": 0,
         "reasoning_effort": "low" if thinking else "none",
-        "chat_template_kwargs": {"enable_thinking": thinking, "thinking": thinking},
     }
+    if provider == "sglang":
+        body["chat_template_kwargs"] = {
+            "enable_thinking": thinking,
+            "thinking": thinking,
+        }
+    if provider == "ollama-cloud":
+        api_base = "https://ollama.com/v1"
+        api_key = api_key or os.getenv("OLLAMA_API_KEY", "")
+        if not api_key:
+            raise ValueError("OLLAMA_API_KEY or CAPTION_API_KEY required for Ollama Cloud")
     headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
     for attempt in range(retries + 1):
-        response = requests.post(
-            api_base.rstrip("/") + "/chat/completions",
-            json=body,
-            headers=headers,
-            timeout=timeout,
-        )
-        response.raise_for_status()
-        choice = response.json()["choices"][0]
-        answer = choice["message"].get("content")
-        if not answer:
-            raise ValueError(
-                f"empty assistant response (finish_reason={choice.get('finish_reason')})"
+        if client is not None:
+            # Bedrock Converse has no provider-independent thinking flag.
+            answer, _ = client.complete(body["messages"], max_tokens=max_tokens)
+        else:
+            response = requests.post(
+                api_base.rstrip("/") + "/chat/completions",
+                json=body,
+                headers=headers,
+                timeout=timeout,
             )
+            response.raise_for_status()
+            choice = response.json()["choices"][0]
+            answer = choice["message"].get("content")
+            if not answer:
+                raise ValueError(
+                    f"empty assistant response (finish_reason={choice.get('finish_reason')})"
+                )
         try:
             parsed = parse_json_reply(answer)
             validator(parsed)
@@ -1042,12 +1082,12 @@ def main():
         "--annotations", required=True, help="Append validated JSONL annotations here"
     )
     annotation.add_argument(
-        "--api-base", default=os.getenv("CAPTION_API_BASE", "http://127.0.0.1:30000/v1")
+        "--api-base", default=os.getenv("CAPTION_API_BASE", default_caption_api_base())
     )
     annotation.add_argument(
-        "--api-key", default=os.getenv("CAPTION_API_KEY", os.getenv("PE_API_KEY", ""))
+        "--api-key", default=os.getenv("CAPTION_API_KEY", os.getenv("PE_API_KEY", os.getenv("OLLAMA_API_KEY", "")))
     )
-    annotation.add_argument("--model", default=os.getenv("CAPTION_MODEL", "kimi-k3"))
+    annotation.add_argument("--model", default=os.getenv("CAPTION_MODEL", os.getenv("PE_MODEL", "kimi-k3")))
     annotation.add_argument("--fps", type=int, default=16)
     annotation.add_argument("--size", type=int, default=512)
     annotation.add_argument("--segment-seconds", type=float, default=4.0)
@@ -1084,12 +1124,12 @@ def main():
         "--output", required=True, help="New .arrow with segments filled as JSON"
     )
     segmentation.add_argument(
-        "--api-base", default=os.getenv("CAPTION_API_BASE", "http://127.0.0.1:30000/v1")
+        "--api-base", default=os.getenv("CAPTION_API_BASE", default_caption_api_base())
     )
     segmentation.add_argument(
-        "--api-key", default=os.getenv("CAPTION_API_KEY", os.getenv("PE_API_KEY", ""))
+        "--api-key", default=os.getenv("CAPTION_API_KEY", os.getenv("PE_API_KEY", os.getenv("OLLAMA_API_KEY", "")))
     )
-    segmentation.add_argument("--model", default=os.getenv("CAPTION_MODEL", "kimi-k3"))
+    segmentation.add_argument("--model", default=os.getenv("CAPTION_MODEL", os.getenv("PE_MODEL", "kimi-k3")))
     segmentation.add_argument("--fps", type=int, default=2)
     segmentation.add_argument("--size", type=int, default=512)
     segmentation.add_argument("--max-frames", type=int, default=256)

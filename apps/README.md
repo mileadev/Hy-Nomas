@@ -4,7 +4,7 @@ Generate and extend videos with text or camera paths. Run commands from the repo
 
 ## 1. Prepare the environment and models
 
-Follow the [Python environment setup](../README.md#environment-setup) and activate your environment. Complete the Python installation before installing frontend dependencies. You also need Node.js 22.x (≥22.12), npm, and compatible **FlashAttention 2, FlashAttention 3, and MagiAttention** builds. Keep the CUDA Toolkit and compiler available in the launch environment for JIT compilation.
+Follow the [Python environment setup](../README.md#install) and activate your environment. Complete the Python installation before installing frontend dependencies. You also need Node.js 22.x (≥22.12), npm, and compatible **FlashAttention 2, FlashAttention 3, and MagiAttention** builds. Keep the CUDA Toolkit and compiler available in the launch environment for JIT compilation.
 
 The demo uses the FFmpeg executable provided by `imageio-ffmpeg`. A separate system FFmpeg installation is optional if this executable works; `ffprobe` is needed by some acceptance tests, not by the basic launch flow. Check it with:
 
@@ -22,7 +22,7 @@ npm --prefix apps/frontend ci
 
 On shared storage, removing or installing `node_modules` can take much longer than on local disk. You can install using copies of `package.json` and `package-lock.json` in a fresh local directory, then symlink `apps/frontend/node_modules` to the resulting directory. Preserve any existing directory before replacing it. Run the frontend build and launcher from this repository. Use a reachable npm registry if package downloads time out.
 
-Download the model repository as described in [Model Assets](../README.md#model-assets). Set `Hy_Nomas_Model_Path` to that download directory once; the launch commands below reuse its value.
+Download the model repository as described in [Model Assets](../README.md#install). Set `Hy_Nomas_Model_Path` to that download directory once; the launch commands below reuse its value.
 
 | Model | Files | Path setting |
 |---|---|---|
@@ -145,7 +145,7 @@ tail -f "$RUNTIME_DIR/worker_0.log" "$RUNTIME_DIR/gateway.log"
 
 ### 2.5. Single-GPU low-memory mode
 
-To use one GPU for video generation, use the INT8 DiT and FP8 PixelUMM weights. Set `CUTLASS_PATH` to a CUTLASS checkout containing the Ada blockwise GEMM example (example 94), as described in [low-memory inference](../README.md#inference-with-low-mem-gpu), then replace the launch command in step 2.3 with:
+To use one GPU for video generation, use the INT8 DiT and FP8 PixelUMM weights. Set `CUTLASS_PATH` to a CUTLASS checkout containing the Ada blockwise GEMM example (example 94), as described in [low-memory inference](../docs/LOCAL_DEPLOYMENT.md#video-execution), then replace the launch command in step 2.3 with:
 
 ```bash
 export Hy_Nomas_Model_Path="${Hy_Nomas_Model_Path:-/path/to/Hy-Nomas}"

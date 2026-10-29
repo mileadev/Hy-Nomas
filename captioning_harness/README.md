@@ -4,7 +4,7 @@ Prepare SFT data from local videos in three stages: **VAE Encoding → Event Seg
 
 ![Local videos, VAE encoding, event segmentation, Kimi-K3 captioning, and the final SFT dataset.](../assets/sft-data-preparation.svg)
 
-Run commands from the repository root. Download the model repository as described in [Model Assets](../README.md#model-assets) and set `Hy_Nomas_Model_Path` to that directory. The commands below reuse its value. Keep the original local videos available for segmentation and captioning.
+Run commands from the repository root. Download the model repository as described in [Model Assets](../README.md#install) and set `Hy_Nomas_Model_Path` to that directory. The commands below reuse its value. Keep the original local videos available for segmentation and captioning.
 
 > The diagram describes the preparation workflow. The current scripts expose separate interfaces: the VAE encoder expects existing prompts and boundaries, and the captioning command uses fixed-duration segments rather than the event-segmentation output. They do not yet implement the complete sequence above automatically.
 
@@ -115,7 +115,7 @@ Keep `dataset.fps` equal to the annotation frame rate. The commands above use 24
 
 For camera-conditioned samples, pass `--camera-dir /path/to/cameras` to `pack`. Each `<sample_id>.npz` must contain normalized FP32 `camera_extrinsics` (`[F,4,4]`) and `camera_intrinsics` (`[F,3,3]`) matching the sampled frames and image preprocessing. Without camera data, samples use `has_camera=false`.
 
-After preparing the training file, create the packing plan below, then follow [Training and Merging](../README.md#training-and-merging).
+After preparing the training file, create the packing plan below, then follow [Training and Merging](../apps/README.md).
 
 ## Offline Sequence Packing
 
